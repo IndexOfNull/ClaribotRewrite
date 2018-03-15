@@ -1,0 +1,38 @@
+{
+  "default": {
+    "_comment": "'default' is reserved for values that are not specified, it should be ignored when selected as a personality. Also, make sure EVERYTHING is put here when developing, as it cannot have any missing values.",
+    "global": {
+      "command_wait": ":inbox_tray: `Ok, I'm processing your command.`",
+      "final_upload_too_big": ":floppy_disk: `I can't upload my response because it's too big, please try again with a smaller file.`",
+      "input_file_too_big": ":floppy_disk: `I can't upload my response because it's too big, please try again with a smaller file.`",
+      "nsfw_no_search_result": ":mag: `I couldn't find any results matching your query.`",
+      "no_search_result": ":mag: `I couldn't find any results matching your query.`",
+      "command_timeout": ":alarm_clock: `Your command timed out, please try again.`"
+    },
+    "commands": {
+      "prefix": {
+        "current_prefix": ":gear: My command prefix for this server is `{0}`.",
+        "set_prefix": ":white_check_mark: I've set my command prefix for this server to `{0}`."
+      },
+      "personality": {
+        "current_personality": ":gear: I'm currently running on the `{0}` personality.",
+        "set_personality": ":white_check_mark: I've set my personality to `{0}`",
+        "invalid_personality": ":no_entry_sign: You entered an invalid personality, the valid personality options are `{0}`"
+      },
+      "blacklist-channel": {
+        "added_blacklist": ":scroll: I've added {0} to the blacklist",
+        "remove_blacklist": ":scroll: I've removed {0} from the blacklist"
+      },
+      "blacklist-user": {
+        "added_blacklist": ":scroll: I've added `{0}` to the blacklist",
+        "remove_blacklist": ":scroll: I've removed `{0}` from the blacklist"
+      }
+    }
+  },
+  "sassy": {
+    "_comment": "the original claribot",
+    "global": {
+      "command_wait": "Fuck off while I do shit"
+    }
+  }
+}

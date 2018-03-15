@@ -1,0 +1,178 @@
+import asyncio
+import datetime
+import sys, os
+import discord
+import re
+import logging
+import json
+from sqlalchemy import create_engine
+from sqlalchemy.orm import scoped_session, sessionmaker
+from discord.ext import commands
+import discord
+from utils.funcs import Funcs
+import time
+
+modules = [
+"mods.Utility"
+]
+
+current_milli_time = lambda: int(round(time.time() * 1000))
+
+def get_personality_info():
+	messages = None
+	defaultmessages = None
+	with open("messages.json","r") as f:
+		messages = json.loads(f.read())
+	print(messages)
+	#with open("defaultmessages.json","r") as f:
+	#	defaultmessages = json.dumps(f.read())
+	return (defaultmessages,messages)
+
+def init_logging(shard_id, bot):
+	mode = logging.INFO
+	logging.root.setLevel(mode)
+	logger = logging.getLogger('Claribot #{0}'.format(shard_id))
+	logger.setLevel(mode)
+	log = logging.getLogger()
+	log.setLevel(mode)
+	handler = logging.FileHandler(filename='claribot_{0}.log'.format(shard_id), encoding='utf-8', mode='a')
+	log.addHandler(handler)
+	bot.logger = logger
+	bot.log = log
+
+class Object(object):
+	pass
+
+def init_funcs(bot):
+	if bot.dev_mode is True:
+		db_name = "Claribot_dev"
+	else:
+		db_name = "Claribot"
+	global cursor, engine, Session
+	engine = create_engine("mysql+pymysql://{0}:{1}@localhost/{2}?charset=utf8mb4".format("claribot"+str(bot.shard_id),bot.db_pswd,db_name),isolation_level="READ COMMITTED")
+	session_factory = sessionmaker(bind=engine)
+	Session = scoped_session(sessionmaker(bind=engine))
+	bot.mysql = Object()
+	engine = bot.mysql.engine = engine
+	cursor = bot.mysql.cursor = bot.get_cursor
+	bot.remove_command("help")
+	funcs = Funcs(bot,cursor)
+	bot.funcs = funcs
+	bot.process_commands = funcs.process_commands
+	bot.get_context = funcs.get_context
+	bot.get_prefix = funcs.get_prefix2
+	bot.getBlacklisted = funcs.getBlacklisted
+	personality_info = get_personality_info()
+	bot.defaultmessages = personality_info[0]
+	bot.messages = personality_info[1]
+
+class Claribot(commands.Bot):
+	def __init__(self, *args, **kwargs):
+		self.loop = kwargs.pop('loop', asyncio.get_event_loop())
+		asyncio.get_child_watcher().attach_loop(self.loop)
+		shard_id = kwargs.get('shard_id', 0)
+		command_prefix = kwargs.pop('command_prefix', commands.when_mentioned_or('$'))
+		super().__init__(command_prefix=command_prefix, *args, **kwargs)
+		self.token = kwargs.pop("token")
+		init_logging(shard_id,self)
+		self.dev_mode = kwargs.pop("dev_mode",False)
+		self.owner = None
+		db_pswd = kwargs.pop('db_pswd')
+		self.db_pswd = db_pswd
+		self.cmd_start = None
+
+	async def on_ready(self):
+		init_funcs(self)
+
+		for cog in modules:
+			try:
+				self.load_extension(cog)
+			except Exception as e:
+				msg = 'Failed to load mod {0}\n{1}: {2}'.format(cog, type(e).__name__, e)
+				print(msg)
+		print('------\n{0}\nShard {1}/{2}{3}------'.format(self.user, self.shard_id, self.shard_count-1, '\nDev Mode: Enabled\n' if self.dev_mode else ''))
+		game = discord.Game(name="with the API")
+		await self.change_presence(activity=game)
+
+
+	async def stress_test(self,message,prefix):
+		print("COMMANDING!")
+		current_time = date.datetime().microsecond / 1000
+		await self.process_commands(message,prefix)
+		done_time = date.datetime().microsecond / 1000
+		print("Done in {0}ms".format(done_time-current_time))
+
+	async def on_message(self, message):
+		await self.wait_until_ready()
+		if self.owner is None:
+			application_info = await self.application_info()
+			self.owner = application_info.owner
+		if self.dev_mode and message.author != self.owner:
+			return
+		if message.author.bot:
+			return
+
+
+		prefix_result = await self.funcs.getPrefix(message) #self.get_prefixes(message), could be used for database config
+		prefix = prefix_result
+
+		blacklisted = await self.getBlacklisted(message)
+		#blacklisted = False
+		if blacklisted and not message.content.lower().startswith(prefix+"blacklist"):
+			print("blacklisted")
+			return
+
+		check = True
+		if message.content.lower().startswith(prefix) and check and message.content.lower() != prefix:
+			prefix_escape = re.escape(prefix)
+			message_regex = re.compile(r'('+prefix_escape+r')'+r'[\s]*(\w+)(.*)', re.I|re.X|re.S)
+			match = message_regex.findall(message.content)
+			if len(match) == 0:
+				return
+			match = match[0]
+			command = match[1].lower()
+			message.content = match[0].lower()+command+match[2]
+			#Maybe do somemore checks here
+			"""print("processing command: " + command)
+			print(message.guild.id)"""
+			"""print("COMMAND!")
+			loop = asyncio.get_event_loop()
+			tasks = []
+			for i in range(1000):
+				tasks.append(self.stress_test(message,prefix))
+			loop.run_until_complete(asyncio.wait(tasks))
+			loop.close()""" #Torture test stuff
+			self.cmd_start = current_milli_time()
+			await self.process_commands(message,prefix)
+
+	async def on_command_error(self, ctx, e):
+		if isinstance(e, commands.CommandNotFound):
+			print("no command")
+			return
+		else:
+			print(e)
+
+	async def on_command_completion(self,ctx):
+		done_time = ctx.message.created_at.microsecond / 1000 - datetime.time().microsecond / 1000
+		print("command done in {0} ms".format(done_time))
+
+	@property
+	def get_cursor(self):
+		return Session()
+
+	def run(self):
+		super().run(self.token)
+
+	def die(self):
+		try:
+			self.loop.stop()
+			self.loop.run_forever()
+		except Exception as e:
+			print(e)
+
+#TO DO
+"""
+	- Setup database support
+	- Setup Commands
+	- Setup utility functions
+"""
