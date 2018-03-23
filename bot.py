@@ -10,10 +10,14 @@ from sqlalchemy.orm import scoped_session, sessionmaker
 from discord.ext import commands
 import discord
 from utils.funcs import Funcs
+from utils import checks
 import time
 
 modules = [
-"mods.Utility"
+"mods.util",
+"mods.fun",
+"mods.misc",
+"mods.nsfw"
 ]
 
 current_milli_time = lambda: int(round(time.time() * 1000))
@@ -23,7 +27,6 @@ def get_personality_info():
 	defaultmessages = None
 	with open("messages.json","r") as f:
 		messages = json.loads(f.read())
-	print(messages)
 	#with open("defaultmessages.json","r") as f:
 	#	defaultmessages = json.dumps(f.read())
 	return (defaultmessages,messages)
@@ -62,9 +65,13 @@ def init_funcs(bot):
 	bot.get_context = funcs.get_context
 	bot.get_prefix = funcs.get_prefix2
 	bot.getBlacklisted = funcs.getBlacklisted
+	bot.getGlobalMessage = funcs.getGlobalMessage
+	bot.getCommandMessage = funcs.getCommandMessage
+	bot.get_images = funcs.get_images
 	personality_info = get_personality_info()
 	bot.defaultmessages = personality_info[0]
 	bot.messages = personality_info[1]
+
 
 class Claribot(commands.Bot):
 	def __init__(self, *args, **kwargs):
@@ -80,10 +87,10 @@ class Claribot(commands.Bot):
 		db_pswd = kwargs.pop('db_pswd')
 		self.db_pswd = db_pswd
 		self.cmd_start = None
+		self.confirmation_commands = ["delwarning","deletewarning"]
 
 	async def on_ready(self):
 		init_funcs(self)
-
 		for cog in modules:
 			try:
 				self.load_extension(cog)
@@ -91,9 +98,17 @@ class Claribot(commands.Bot):
 				msg = 'Failed to load mod {0}\n{1}: {2}'.format(cog, type(e).__name__, e)
 				print(msg)
 		print('------\n{0}\nShard {1}/{2}{3}------'.format(self.user, self.shard_id, self.shard_count-1, '\nDev Mode: Enabled\n' if self.dev_mode else ''))
-		game = discord.Game(name="with the API")
+		game = discord.Game(name="rewrite coming, now with less unused commands")
 		await self.change_presence(activity=game)
 
+	async def command_help(self,ctx):
+		if ctx.invoked_subcommand:
+			cmd = ctx.invoked_subcommand
+		else:
+			cmd = ctx.command
+		pages = await self.formatter.format_help_for(ctx, cmd)
+		for page in pages:
+			await ctx.message.channel.send(page.replace("\n", "fix\n", 1))
 
 	async def stress_test(self,message,prefix):
 		print("COMMANDING!")
@@ -101,6 +116,7 @@ class Claribot(commands.Bot):
 		await self.process_commands(message,prefix)
 		done_time = date.datetime().microsecond / 1000
 		print("Done in {0}ms".format(done_time-current_time))
+
 
 	async def on_message(self, message):
 		await self.wait_until_ready()
@@ -124,6 +140,8 @@ class Claribot(commands.Bot):
 
 		check = True
 		if message.content.lower().startswith(prefix) and check and message.content.lower() != prefix:
+
+
 			prefix_escape = re.escape(prefix)
 			message_regex = re.compile(r'('+prefix_escape+r')'+r'[\s]*(\w+)(.*)', re.I|re.X|re.S)
 			match = message_regex.findall(message.content)
@@ -132,7 +150,9 @@ class Claribot(commands.Bot):
 			match = match[0]
 			command = match[1].lower()
 			message.content = match[0].lower()+command+match[2]
-			#Maybe do somemore checks here
+			#confirmed = await self.confirmation_command(message,command)
+			#if not confirmed:
+			#	return
 			"""print("processing command: " + command)
 			print(message.guild.id)"""
 			"""print("COMMAND!")
@@ -146,11 +166,39 @@ class Claribot(commands.Bot):
 			await self.process_commands(message,prefix)
 
 	async def on_command_error(self, ctx, e):
+		personality = await self.funcs.getPersonality(ctx.message)
 		if isinstance(e, commands.CommandNotFound):
 			print("no command")
-			return
+		elif isinstance(e, commands.CommandOnCooldown):
+			msg = (await self.funcs.getGlobalMessage(personality,"cooldown"))
+			await ctx.send(msg)
+		elif isinstance(e, checks.No_Owner):
+			msg = (await self.funcs.getGlobalMessage(personality,"no_bot_owner"))
+			await ctx.send(msg)
+		elif isinstance(e, commands.MissingRequiredArgument):
+			await self.command_help(ctx)
+		elif isinstance(e, commands.BadArgument):
+			await self.command_help(ctx)
+		elif isinstance(e, checks.No_Mod):
+			msg = (await self.funcs.getGlobalMessage(personality,"no_mod"))
+			await ctx.send(msg)
+		elif isinstance(e, checks.No_Admin):
+			msg = (await self.funcs.getGlobalMessage(personality,"no_admin"))
+			await ctx.send(msg)
+		elif isinstance(e, checks.No_Role):
+			msg = (await self.funcs.getGlobalMessage(personality,"no_role"))
+			await ctx.send(msg)
+		elif isinstance(e, checks.Nsfw):
+			msg = (await self.funcs.getGlobalMessage(personality,"no_nsfw"))
+			await ctx.send(msg)
+		elif isinstance(e, commands.CheckFailure):
+			msg = (await self.funcs.getGlobalMessage(personality,"check_failure"))
+			await ctx.send(msg)
+		elif isinstance(e, discord.errors.Forbidden):
+			msg = "I'm missing the necessary permissions for this command"
+			await ctx.send(msg)
 		else:
-			print(e)
+			print("ERROR: " + str(e))
 
 	async def on_command_completion(self,ctx):
 		done_time = ctx.message.created_at.microsecond / 1000 - datetime.time().microsecond / 1000

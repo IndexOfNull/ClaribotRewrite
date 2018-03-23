@@ -2,17 +2,35 @@
   "default": {
     "_comment": "'default' is reserved for values that are not specified, it should be ignored when selected as a personality. Also, make sure EVERYTHING is put here when developing, as it cannot have any missing values.",
     "global": {
-      "command_wait": ":inbox_tray: `Ok, I'm processing your command.`",
-      "final_upload_too_big": ":floppy_disk: `I can't upload my response because it's too big, please try again with a smaller file.`",
-      "input_file_too_big": ":floppy_disk: `I can't upload my response because it's too big, please try again with a smaller file.`",
-      "nsfw_no_search_result": ":mag: `I couldn't find any results matching your query.`",
-      "no_search_result": ":mag: `I couldn't find any results matching your query.`",
-      "command_timeout": ":alarm_clock: `Your command timed out, please try again.`"
+      "command_wait": ":inbox_tray: Ok, I'm processing your command.",
+      "final_upload_too_big": ":floppy_disk: I can't upload my response because it's too big, please try again with a smaller file.",
+      "input_file_too_big": ":floppy_disk: I can't upload my response because it's too big, please try again with a smaller file.",
+      "nsfw_no_search_result": ":mag: I couldn't find anything matching your query.",
+      "no_search_result": ":mag: I couldn't find anything matching your query.",
+      "command_timeout": ":alarm_clock: Your command timed out, please try again.",
+      "check_failure": ":fire: Something went wrong while verifying your commands requirements.",
+      "no_image_perm": ":x: I don't have the permission to upload images in this channel. I may not be permitted to attach files and send messages.",
+      "no_nsfw": ":underage: This command is NSFW only, please use it in a NSFW channel.",
+      "no_admin": ":no_entry: You need admin privileges to use this command.",
+      "no_role": ":no_entry: You need a specific role or privelage to use this command.",
+      "no_mod": ":no_entry: You need moderator privileges to use this command.",
+      "no_server_owner": ":no_entry: You need to be the server owner to use this command.",
+      "no_bot_owner": ":no_entry: You need to be the bot owner to use this command (if you are the bot owner, please check and see that 'bot_owner' is set properly).",
+      "file_limit": ":package: You have hit this command's file limit, please use less than {0} files.",
+      "image_command": ":frame_photo: This command is for images, not gifs.",
+      "gif_command": ":basketball_player: This command is for gifs, not images.",
+      "invalid_image": ":frame_photo: You have an invalid image ({0}).",
+      "image_error": ":warning: I was unable to download and/or verify one of your files.",
+      "missing_image_attachments": ":no_entry: Please input url(s){0}or attachment(s).",
+      "download_fail": ":warning: I was unable to download your image.",
+      "api_error": ":warning: An API error occured.",
+      "cooldown": ":watch: This command needs some time before being used again."
     },
     "commands": {
       "prefix": {
         "current_prefix": ":gear: My command prefix for this server is `{0}`.",
-        "set_prefix": ":white_check_mark: I've set my command prefix for this server to `{0}`."
+        "set_prefix": ":white_check_mark: I've set my command prefix for this server to `{0}`.",
+        "input_too_big": ":no_entry_sign: Please enter a prefix shorter than {0}."
       },
       "personality": {
         "current_personality": ":gear: I'm currently running on the `{0}` personality.",
@@ -26,6 +44,36 @@
       "blacklist-user": {
         "added_blacklist": ":scroll: I've added `{0}` to the blacklist",
         "remove_blacklist": ":scroll: I've removed `{0}` from the blacklist"
+      },
+      "random-number": {
+        "min-greater": ":warning: Your minimum is greater than your maximum"
+      },
+      "crypto": {
+        "invalid-codes": ":warning: Something went wrong, make sure that you are using valid 3 character currency codes"
+      },
+      "flip": {
+        "message": ":cd: {0}"
+      },
+      "roll": {
+        "high_count": ":x: Please enter a number of dice smaller than {0}",
+        "high_sides": ":x: Please enter a side count smaller than {0}"
+      },
+      "warn": {
+        "sent": ":white_check_mark: I've sent a warning to **{0.name}#{0.discriminator}**"
+      },
+      "warnhistory": {
+        "sent": "{0.mention} I've sent you a copy of the warnings for **{1.name}#{1.discriminator}**.",
+        "clean_full": ":smiley: User **{0.name}#{0.discriminator}** has no warnings on record!",
+        "clean_partial": ":neutral_face: User **{0.name}#{0.discriminator}** has no warnings for server **{1.name}** (`{1.id}`), but has some on other servers.",
+        "clean_partial_notice": ":exclamation: This user has warnings on other servers."
+      },
+      "delwarning": {
+        "error": ":warning: The ID you entered doesn't exist or there was an error deleting the specified record.",
+        "deleted": ":white_check_mark: The warning `{0}` has been deleted."
+      },
+      "getwarning": {
+        "error": ":warning: The ID you entered doesn't exist or there was a problem retrieving the specified warning.",
+        "sent": "{0.mention} I've sent you a copy of the warning `{1}`"
       }
     }
   },

@@ -1,6 +1,9 @@
 import asyncio
 from discord.ext import commands
 import discord
+from utils import checks
+from random import *
+import hashlib
 
 class Utility():
 
@@ -12,22 +15,24 @@ class Utility():
 		self.getGlobalMessage = self.bot.funcs.getGlobalMessage
 
 	@commands.command()
-	async def test(self,ctx):
-		personality = await self.getPersonality(ctx.message)
-		msg = (await self.getGlobalMessage(personality,"command_wait"))
-		await ctx.send(msg)
+	@commands.cooldown(1,2,commands.BucketType.user)
+	async def help(self,ctx):
+		await ctx.send(ctx.message.author.mention + " ")
 
 	@commands.group()
+	@commands.cooldown(1,3,commands.BucketType.guild)
 	@commands.guild_only()
 	async def blacklist(self,ctx):
 	    if ctx.invoked_subcommand is None:
 	        await ctx.send('Invalid subcommand passed...')
 
 
+
 	@blacklist.command(pass_context=True)
-	#WE NEED A CHECK HERE
+	@commands.cooldown(1,3,commands.BucketType.guild)
+	@checks.admin_or_perm(manage_channels=True)
 	async def channel(self,ctx,channel:discord.TextChannel=None):
-		personality = await self.getPersonality(ctx.message)
+		personality = ctx.personality
 		msg = (await self.getGlobalMessage(personality,"command_wait"))
 		wait = await ctx.send(msg)
 		await ctx.channel.trigger_typing()
@@ -56,9 +61,10 @@ class Utility():
 		await ctx.send(msg)
 
 	@blacklist.command(pass_context=True)
-	#WE NEED A CHECK HERE
+	@commands.cooldown(1,3,commands.BucketType.guild)
+	@checks.mod_or_perm(mute_members=True)
 	async def user(self,ctx,user:discord.Member):
-		personality = await self.getPersonality(ctx.message)
+		personality = ctx.personality
 		msg = (await self.getGlobalMessage(personality,"command_wait"))
 		wait = await ctx.send(msg)
 		await ctx.channel.trigger_typing()
@@ -80,9 +86,14 @@ class Utility():
 		await ctx.send(msg)
 
 	@commands.command(pass_context=True)
+	@commands.cooldown(1,3,commands.BucketType.guild)
 	@commands.guild_only()
+	@checks.admin_or_perm(manage_server=True)
 	async def prefix(self, ctx, *, txt:str=None):
-		personality = await self.getPersonality(ctx.message)
+		personality = ctx.personality
+		if len(txt) > 10:
+			await ctx.send((await self.getCommandMessage(personality,ctx,"input_too_big")).format(10))
+			return
 		msg = (await self.getGlobalMessage(personality,"command_wait"))
 		wait = await ctx.send(msg)
 		await ctx.channel.trigger_typing()
@@ -110,10 +121,134 @@ class Utility():
 			await wait.delete()
 			await ctx.send(msg)
 
-	@commands.command(pass_context=True)
+	@commands.command()
+	@commands.cooldown(1,3,commands.BucketType.guild)
 	@commands.guild_only()
+	@checks.mod_or_perm(manage_messages=True)
+	async def warn(self,ctx,user:discord.Member,*,txt:str):
+		wait = await ctx.send((await self.bot.getGlobalMessage(ctx.personality,"command_wait")))
+		try:
+			await ctx.trigger_typing()
+			embed = discord.Embed(title="Server Warning",type="rich",color=discord.Color.red())
+			embed.add_field(name="Server",value="{0.name} ({0.id})".format(ctx.guild),inline=True)
+			embed.add_field(name="Warned By",value=ctx.author.mention,inline=True)
+			embed.add_field(name="Timestamp",value=(await self.bot.funcs.getCurrentFormattedTime()),inline=False)
+
+			currenttime = str(str((await self.bot.funcs.getUTCNow())) + " " + str(randint(0,1000))).encode("utf-8")
+			hashed = str(hashlib.sha1(currenttime).hexdigest())[:6]
+			embed.add_field(name="Issue ID",value=hashed,inline=True)
+			embed.add_field(name="Reason",value=txt,inline=False)
+			embed.set_footer(text="You may be able to contact an admin about this incident. You may also need to provide the given issue id.")
+			sql = "INSERT INTO `warnings` (`server_id`, `user_id`, `reason`, `warner`, `timestamp`, `issue_id`) VALUES ('{0.guild.id}', '{1}', '{2}', '{3}', '{4}', '{5}');".format(ctx,user.id,txt,ctx.author.id,(await self.bot.funcs.getUTCNow()),hashed)
+			self.cursor.execute(sql)
+			self.cursor.commit()
+			await wait.delete()
+			await user.send(embed=embed)
+			msg = (await self.getCommandMessage(ctx.personality,ctx,"sent")).format(user)
+			await ctx.send(msg)
+		except Exception as e:
+			await wait.edit(content="`{0}`".format(e))
+			print(e)
+
+	@commands.command()
+	@commands.cooldown(1,3,commands.BucketType.guild)
+	@commands.guild_only()
+	@checks.mod_or_perm(manage_messages=True)
+	async def warnhistory(self,ctx,user:discord.Member):
+		wait = await ctx.send((await self.bot.getGlobalMessage(ctx.personality,"command_wait")))
+		try:
+			await ctx.trigger_typing()
+			sql = "SELECT * FROM `warnings` WHERE server_id={0.id} AND user_id={1.id} ORDER BY `timestamp` DESC".format(ctx.message.guild,user)
+			result = self.cursor.execute(sql).fetchall()
+			sql2 = "SELECT `issue_id` FROM `warnings` WHERE server_id!={0.id} AND user_id={1.id}".format(ctx.message.guild,user)
+			result2 = self.cursor.execute(sql2).fetchall()
+			clean = True
+			finalmsg = (await self.getCommandMessage(ctx.personality,ctx,"clean_full")).format(user)
+			if result:
+				finalmsg = "Showing warning history for user **{0.name}#{0.discriminator}**\n".format(user)
+				listentry = "\n{0}: {1}, ID: `{2}`"
+				warnings = result[:5]
+				for idx,warning in enumerate(warnings):
+					utc = (await self.bot.funcs.secondsToUTC(warning["timestamp"]))
+					timestamp = (await self.bot.funcs.getFormattedTime(utc))
+					finalmsg += listentry.format(idx+1, timestamp, warning["issue_id"])
+				if result2:
+					finalmsg += "\n\n" + (await self.getCommandMessage(ctx.personality,ctx,"clean_partial_notice"))
+			#THIS IF STATEMENT NEEDS SOME LOVE
+			if result2 and not result:
+				finalmsg = (await self.getCommandMessage(ctx.personality,ctx,"clean_partial")).format(user,ctx.message.guild)
+
+			await ctx.message.author.send(finalmsg)
+			await ctx.send((await self.getCommandMessage(ctx.personality,ctx,"sent")).format(ctx.message.author,user))
+			await wait.delete()
+		except Exception as e:
+			await wait.edit(content="`{0}`".format(e))
+			print(e)
+
+	@commands.command()
+	@commands.cooldown(1,3,commands.BucketType.guild)
+	@commands.guild_only()
+	@checks.mod_or_perm(manage_messages=True)
+	async def getwarning(self,ctx,warning_id:str):
+		wait = await ctx.send((await self.bot.getGlobalMessage(ctx.personality,"command_wait")))
+		try:
+			await ctx.trigger_typing()
+			sql = "SELECT * FROM `warnings` WHERE server_id={0.id} AND issue_id='{1}'".format(ctx.message.guild,warning_id)
+			result = self.cursor.execute(sql).fetchall()[0]
+
+			if result:
+				embed = discord.Embed(title="Server Warning",type="rich",color=discord.Color.red())
+				embed.add_field(name="Server",value="{0.name} ({0.id})".format(ctx.guild),inline=True)
+				print("good")
+				embed.add_field(name="Warned By",value=self.bot.get_user(result["warner"]).mention,inline=True)
+				print("good")
+				utc = (await self.bot.funcs.secondsToUTC(result["timestamp"]))
+				print("good")
+				timestamp = (await self.bot.funcs.getFormattedTime(utc))
+				embed.add_field(name="Timestamp",value=timestamp,inline=False)
+				embed.add_field(name="Issue ID",value=result["issue_id"],inline=True)
+				embed.add_field(name="Reason",value=result["reason"],inline=False)
+				embed.set_footer(text="This is not a real warning, just a mere recreation")
+				await ctx.message.author.send(embed=embed)
+				await ctx.send((await self.getCommandMessage(ctx.personality,ctx,"sent")).format(ctx.message.author,result["issue_id"]))
+			elif not result:
+				await ctx.send((await self.getCommandMessage(ctx.personality,ctx,"error")).format(ctx.message.author,user))
+			await wait.delete()
+		except Exception as e:
+			await wait.edit(content="`{0}`".format(e))
+			print(e)
+
+	@commands.command()
+	@commands.cooldown(1,3)
+	@commands.guild_only()
+	@checks.mod_or_perm(manage_messages=True)
+	async def delwarning(self,ctx,warning_id:str):
+		confirmed = await self.bot.funcs.confirm_command(ctx)
+		if not confirmed:
+			return
+		#wait = await ctx.send((await self.bot.getGlobalMessage(ctx.personality,"command_wait")))
+		try:
+			await ctx.trigger_typing()
+			sql = "DELETE FROM `warnings` WHERE server_id={0.id} AND issue_id='{1}'".format(ctx.message.guild,warning_id)
+			result = self.cursor.execute(sql)
+			if result.rowcount == 0:
+				msg = (await self.getCommandMessage(ctx.personality,ctx,"error"))
+				await ctx.send(content=msg)
+				return
+			self.cursor.commit()
+			await ctx.send((await self.getCommandMessage(ctx.personality,ctx,"deleted")).format(warning_id))
+		except Exception as e:
+			await ctx.send(content="`{0}`".format(e))
+			print(e)
+
+
+
+	@commands.command(pass_context=True)
+	@commands.cooldown(1,3,commands.BucketType.guild)
+	@commands.guild_only()
+	@checks.admin_or_perm(manage_server=True)
 	async def personality(self,ctx,txt:str=None):
-		personality = await self.getPersonality(ctx.message)
+		personality = ctx.personality
 		msg = (await self.getGlobalMessage(personality,"command_wait"))
 		wait = await ctx.send(msg)
 		await ctx.channel.trigger_typing()
@@ -149,3 +284,8 @@ class Utility():
 
 def setup(bot):
 	bot.add_cog(Utility(bot))
+
+
+lol = "4"
+def add(sum1,sum2):
+	return sum1 + sum2
