@@ -75,7 +75,10 @@ def init_funcs(bot):
 
 class Claribot(commands.Bot):
 	def __init__(self, *args, **kwargs):
-		self.loop = kwargs.pop('loop', asyncio.get_event_loop())
+		if sys.platform == "win32":
+			self.loop = kwargs.pop('loop', asyncio.ProactorEventLoop())
+		else:
+			self.loop = kwargs.pop('loop', asyncio.get_event_loop())
 		asyncio.get_child_watcher().attach_loop(self.loop)
 		shard_id = kwargs.get('shard_id', 0)
 		command_prefix = kwargs.pop('command_prefix', commands.when_mentioned_or('$'))
