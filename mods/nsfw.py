@@ -6,7 +6,7 @@ import xml.etree.ElementTree as ET
 from utils import checks
 import asyncio
 import aiohttp
-from aiosocksy.connector import ProxyConnector, ProxyClientRequest
+#from aiosocksy.connector import ProxyConnector, ProxyClientRequest
 import json
 
 class NSFW():
@@ -20,11 +20,13 @@ class NSFW():
 		query = kwargs.pop("query")
 		furry = kwargs.pop("furry",False)
 		ctx = kwargs.pop("ctx",None)
+		no_no = False
 		if query.startswith(await self.bot.funcs.b64decode(self.sure)):
 			no_no = True
 			query = query.replace(await self.bot.funcs.b64decode(self.sure)+" ","",1)
 			if ctx:
-				await ctx.message.delete()
+				if isinstance(ctx.message.channel, discord.TextChannel):
+					await ctx.message.delete()
 		if furry:
 			query = "tag:anthro " + query
 		offset = kwargs.pop("offset", randint(0,700))
@@ -52,8 +54,9 @@ class NSFW():
 					no_nos.append({"url": mediaurl, "source": link})
 			if len(no_nos) == 0:
 				max_attempts = 3
+				offset = randint(0,60)
 				for i in range(max_attempts):
-					url = "https://backend.deviantart.com/rss.xml?type=deviation&offset={0}&q={1}".format(offset,urllib.parse.quote_plus(query))
+					url = "https://backend.deviantart.com/rss.xml?type=deviation&offset={0}&q={1}".format(offset*max_attempts,urllib.parse.quote_plus(query))
 					response = await self.bot.funcs.http_get(url=url)
 					root = ET.fromstring(response)
 					channel = root.find("channel")
@@ -125,12 +128,13 @@ class NSFW():
 	@commands.command()
 	@checks.nsfw()
 	@commands.cooldown(1,3,commands.BucketType.guild)
-	async def catgirl(self,ctx,txt:str=None):
+	async def catgirl(self,ctx,txt:str=""):
 		wait = await ctx.send((await self.bot.getGlobalMessage(ctx.personality,"command_wait")))
 		no_no = False
 		if self.sure == (await self.bot.funcs.b64encode(txt)):
 			no_no = True
-			await ctx.message.delete()
+			if isinstance(ctx.message.channel, discord.TextChannel):
+				await ctx.message.delete()
 		try:
 			#conn = ProxyConnector(remote_resolve=True)
 

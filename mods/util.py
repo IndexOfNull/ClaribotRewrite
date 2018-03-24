@@ -31,6 +31,7 @@ class Utility():
 
 	@blacklist.command(pass_context=True)
 	@commands.cooldown(1,3,commands.BucketType.guild)
+	@commands.guild_only()
 	@checks.admin_or_perm(manage_channels=True)
 	async def channel(self,ctx,channel:discord.TextChannel=None):
 		personality = ctx.personality
@@ -63,6 +64,7 @@ class Utility():
 
 	@blacklist.command(pass_context=True)
 	@commands.cooldown(1,3,commands.BucketType.guild)
+	@commands.guild_only()
 	@checks.mod_or_perm(mute_members=True)
 	async def user(self,ctx,user:discord.Member):
 		personality = ctx.personality

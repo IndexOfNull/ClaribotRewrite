@@ -68,6 +68,7 @@ NSFW (must be used in an NSFW channel):
 
 Server Commands:
   1. (^)Prefix                 : $prefix <prefix>*
+  2. (^)Personality            : $personality <personality>*
 
 Blacklist:
   1. Blacklist              : $blacklist <type> <target>
@@ -77,3 +78,7 @@ Blacklist:
 Owner Commands (all require bot owner privileges):
   1. Eval                   : $eval <code>*
   2. Playing Status         : $status <text>*
+
+TODO:
+  1. Make a blacklist "list" command so users can see blacklisted channels
+  2. Make a level system
