@@ -74,6 +74,9 @@
       "getwarning": {
         "error": ":warning: The ID you entered doesn't exist or there was a problem retrieving the specified warning.",
         "sent": "{0.mention} I've sent you a copy of the warning `{1}`"
+      },
+      "status": {
+        "success": ":white_check_mark: My playing status has been updated successfully."
       }
     }
   },

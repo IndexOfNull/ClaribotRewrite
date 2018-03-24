@@ -4,6 +4,7 @@ import discord
 from utils import checks
 from random import *
 import hashlib
+from sqlalchemy.sql import text
 
 class Utility():
 
@@ -17,7 +18,7 @@ class Utility():
 	@commands.command()
 	@commands.cooldown(1,2,commands.BucketType.user)
 	async def help(self,ctx):
-		await ctx.send(ctx.message.author.mention + " ")
+		await ctx.send(ctx.message.author.mention + " https://github.com/IndexOfNull/ClaribotRewrite/blob/master/Commands.txt")
 
 	@commands.group()
 	@commands.cooldown(1,3,commands.BucketType.guild)
@@ -42,7 +43,7 @@ class Utility():
 		if channel not in ctx.message.guild.channels:
 			return
 		blacklisted = False
-		sql = "SELECT channel_id FROM `blacklist` WHERE channel_id={0}".format(channel.id)
+		sql = "SELECT channel_id FROM `blacklist_channels` WHERE channel_id={0}".format(channel.id)
 		result = self.cursor.execute(sql).fetchall()
 		print(result)
 		if result:
@@ -50,10 +51,10 @@ class Utility():
 			if result[0]["channel_id"] == channel.id:
 				blacklisted = True
 		if blacklisted is True:
-			sql = "DELETE FROM `blacklist` WHERE channel_id={0}".format(channel.id)
+			sql = "DELETE FROM `blacklist_channels` WHERE channel_id={0}".format(channel.id)
 			msg = (await self.getCommandMessage(personality, ctx, "remove_blacklist", "blacklist-channel")).format(channel.mention)
 		else:
-			sql = "INSERT INTO `blacklist` (`server_id`, `channel_id`, `user_id`) VALUES ('{0}', '{1}', '0')".format(channel.guild.id,channel.id)
+			sql = "INSERT INTO `blacklist_channels` (`server_id`, `channel_id`) VALUES ('{0}', '{1}')".format(channel.guild.id,channel.id)
 			msg = (await self.getCommandMessage(personality, ctx, "added_blacklist", "blacklist-channel")).format(channel.mention)
 		result = self.cursor.execute(sql)
 		self.cursor.commit()
@@ -69,16 +70,16 @@ class Utility():
 		wait = await ctx.send(msg)
 		await ctx.channel.trigger_typing()
 		blacklisted = False
-		sql = "SELECT user_id FROM `blacklist` WHERE user_id={0} AND server_id={1}".format(user.id,ctx.message.guild.id)
+		sql = "SELECT user_id FROM `blacklist_users` WHERE user_id={0} AND server_id={1}".format(user.id,ctx.message.guild.id)
 		result = self.cursor.execute(sql).fetchall()
 		if result:
 			if result[0]["user_id"] == user.id:
 				blacklisted = True
 		if blacklisted is True:
-			sql = "DELETE FROM `blacklist` WHERE user_id={0} AND server_id={1}".format(user.id,ctx.message.guild.id)
+			sql = "DELETE FROM `blacklist_users` WHERE user_id={0} AND server_id={1}".format(user.id,ctx.message.guild.id)
 			msg = (await self.getCommandMessage(personality, ctx, "remove_blacklist", "blacklist-user")).format(user.name)
 		else:
-			sql = "INSERT INTO `blacklist` (`server_id`, `channel_id`, `user_id`) VALUES ('{0}', '0', '{1}')".format(ctx.channel.guild.id,user.id)
+			sql = "INSERT INTO `blacklist_users` (`server_id`, `user_id`) VALUES ('{0}', '{1}')".format(ctx.channel.guild.id,user.id)
 			msg = (await self.getCommandMessage(personality, ctx, "added_blacklist", "blacklist-user")).format(user.name)
 		result = self.cursor.execute(sql)
 		self.cursor.commit()
@@ -112,10 +113,10 @@ class Utility():
 		else:
 			if txt.lower() != server_prefix:
 				if len(result) == 0:
-					sql = "INSERT INTO `prefix` (`server_id`, `prefix`) VALUES ('{0}', '{1}')".format(ctx.message.guild.id,txt.lower())
+					sql = "INSERT INTO `prefix` (`server_id`, `prefix`) VALUES ('{0}', :prefix)".format(ctx.message.guild.id)
 				else:
-					sql = 'UPDATE `prefix` SET prefix={0} WHERE server_id={1}'.format('"'+txt.lower()+'"',ctx.message.guild.id)
-				result = self.cursor.execute(sql)
+					sql = 'UPDATE `prefix` SET prefix= :prefix WHERE server_id={0}'.format(ctx.message.guild.id)
+				result = self.cursor.execute(sql, {"prefix": txt.lower()})
 				self.cursor.commit()
 			msg = (await self.getCommandMessage(personality, ctx, "set_prefix")).format(txt.lower())
 			await wait.delete()
@@ -139,8 +140,10 @@ class Utility():
 			embed.add_field(name="Issue ID",value=hashed,inline=True)
 			embed.add_field(name="Reason",value=txt,inline=False)
 			embed.set_footer(text="You may be able to contact an admin about this incident. You may also need to provide the given issue id.")
-			sql = "INSERT INTO `warnings` (`server_id`, `user_id`, `reason`, `warner`, `timestamp`, `issue_id`) VALUES ('{0.guild.id}', '{1}', '{2}', '{3}', '{4}', '{5}');".format(ctx,user.id,txt,ctx.author.id,(await self.bot.funcs.getUTCNow()),hashed)
-			self.cursor.execute(sql)
+			#sql = "INSERT INTO `warnings` (`server_id`, `user_id`, `reason`, `warner`, `timestamp`, `issue_id`) VALUES ('{0.guild.id}', '{1}', '{2}', '{3}', '{4}', '{5}');".format(ctx,user.id,txt,ctx.author.id,(await self.bot.funcs.getUTCNow()),hashed)
+			sql = text("INSERT INTO `warnings` (`server_id`, `user_id`, `reason`, `warner`, `timestamp`, `issue_id`) VALUES ('{0.guild.id}', '{1}', :reason, '{2}', '{3}', '{4}');".format(ctx,user.id,ctx.author.id,(await self.bot.funcs.getUTCNow()),hashed))
+			#sql = "INSERT INTO `warnings` (`server_id`, `user_id`, `reason`, `warner`, `timestamp`, `issue_id`) VALUES (':guild', ':user_id', ':reason', ':warner', ':timestamp', ':issue_id');"
+			self.cursor.execute(sql, {"reason":txt})
 			self.cursor.commit()
 			await wait.delete()
 			await user.send(embed=embed)
@@ -281,6 +284,69 @@ class Utility():
 			msg = (await self.getCommandMessage(personality, ctx, "set_personality")).format(txt.lower())
 			await wait.delete()
 			await ctx.send(msg)
+
+	@commands.command(pass_context=True,hidden=True)
+	@checks.is_bot_owner()
+	@commands.cooldown(1,5)
+	async def exec(self, ctx, *, code:str):
+		code = code.strip('` ')
+		python = '```py\n{}\n```'
+		result = None
+		variables = {
+			'bot': self.bot,
+			'ctx': ctx,
+			'message': ctx.message,
+			'server': ctx.message.guild,
+			'channel': ctx.message.channel,
+			'author': ctx.message.author
+		}
+		try:
+			result = exec(code, variables)
+		except Exception as e:
+			await ctx.message.channel.send(python.format(type(e).__name__ + ': ' + str(e)))
+			return
+		if asyncio.iscoroutine(result):
+			result = await result
+		#"```markdown\nUSE THIS WITH EXTREME CAUTION\n\nEval() Results\n=========\n\n> " + python.format(result)) + "\n```"
+		await ctx.message.channel.send(python.format(result))
+
+	@commands.command(pass_context=True,hidden=True)
+	@checks.is_bot_owner()
+	@commands.cooldown(1,5)
+	async def eval(self, ctx, *, code:str):
+		code = code.strip('` ')
+		python = '```py\n{}\n```'
+		result = None
+		variables = {
+			'bot': self.bot,
+			'ctx': ctx,
+			'message': ctx.message,
+			'server': ctx.message.guild,
+			'channel': ctx.message.channel,
+			'author': ctx.message.author
+		}
+		try:
+			result = eval(code, variables)
+		except Exception as e:
+			await ctx.message.channel.send(python.format(type(e).__name__ + ': ' + str(e)))
+			return
+		if asyncio.iscoroutine(result):
+			result = await result
+		#"```markdown\nUSE THIS WITH EXTREME CAUTION\n\nEval() Results\n=========\n\n> " + python.format(result)) + "\n```"
+		await ctx.message.channel.send(python.format(result))
+
+	@commands.command(pass_context=True,aliases=["playing"])
+	@checks.is_bot_owner()
+	@commands.cooldown(1,5)
+	async def status(self, ctx, *, motd:str):
+		await self.bot.change_presence(activity=discord.Game(name=motd))
+		sql = "UPDATE `bot_data` SET value= :motd WHERE var_name='playing'"
+		self.cursor.execute(sql, {"motd": motd})
+		self.cursor.commit()
+		msg = await ctx.message.channel.send(await self.getCommandMessage(ctx.personality,ctx,"success"))
+		await asyncio.sleep(5)
+		await msg.delete()
+		print("MOTD changed to: " + motd)
 
 def setup(bot):
 	bot.add_cog(Utility(bot))

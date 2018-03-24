@@ -14,6 +14,7 @@ import datetime
 import time
 from dateutil import tz
 from dateutil.tz import *
+import base64
 
 class Funcs():
 	def __init__(self,bot,cursor):
@@ -23,6 +24,12 @@ class Funcs():
 		self.session = aiohttp.ClientSession()
 		self.image_mimes = ['image/png', 'image/pjpeg', 'image/jpeg', 'image/x-icon']
 		self.epoch = datetime.datetime.utcfromtimestamp(0)
+
+	async def b64encode(self,txt):
+		return base64.b64encode(txt.encode("ascii")).decode("utf-8")
+
+	async def b64decode(self,txt):
+		return base64.b64decode(txt.encode("ascii")).decode("utf-8")
 
 	async def getUTCMillis(self,dt):
 		return int((dt - self.epoch).total_seconds() * 1000.0)
@@ -472,13 +479,14 @@ class Funcs():
 			#print(bypass)
 			if bypass:
 				return False
-			sql = "SELECT channel_id FROM `blacklist` WHERE channel_id={0}".format(message.channel.id)
+			sql = "SELECT channel_id FROM `blacklist_channels` WHERE channel_id={0}".format(message.channel.id)
 			result = self.cursor.execute(sql).fetchall()
+			print(result)
 			if result:
 				if result[0]["channel_id"] == message.channel.id:
 					blacklisted = True
 			if not result:
-				sql = "SELECT user_id FROM `blacklist` WHERE user_id={0} AND server_id={1}".format(message.author.id,message.guild.id)
+				sql = "SELECT user_id FROM `blacklist_users` WHERE user_id={0} AND server_id={1}".format(message.author.id,message.guild.id)
 				result = self.cursor.execute(sql).fetchall()
 				if result:
 					if result[0]["user_id"] == message.author.id:

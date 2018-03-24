@@ -489,5 +489,18 @@ class Fun():
 			await ctx.send(content="`{0}`".format(e))
 			print(e)
 
+	@commands.command()
+	@commands.cooldown(1,2,commands.BucketType.user)
+	async def freesmiley(self,ctx):
+		url = "http://bilder-lustige-bilder.de/images/{0}_lustige_smiley_bilder.jpg".format(randint(1,20))
+		try:
+			await ctx.trigger_typing()
+			embed = discord.Embed(title=":camera: **Source**",type="rich",url="http://free-smiley.de",color=discord.Color.gold())
+			embed.set_image(url=url)
+			await ctx.send(embed=embed)
+		except Exception as e:
+			await ctx.send(content="`{0}`".format(e))
+			print(e)
+
 def setup(bot):
 	bot.add_cog(Fun(bot))

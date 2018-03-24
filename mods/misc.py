@@ -11,6 +11,66 @@ class Misc():
 		self.getGlobalMessage = self.bot.funcs.getGlobalMessage
 		self.getCommandMessage = self.bot.funcs.getCommandMessage
 
+	@commands.command()
+	@commands.cooldown(1,2,commands.BucketType.user)
+	async def reverse(self,ctx,*,txt:str):
+		await ctx.send(txt[::-1])
+
+	@commands.command()
+	@commands.cooldown(1,2,commands.BucketType.user)
+	async def upsidedown(self,ctx,*,txt:str):
+		rot180={
+			' ' : ' ',
+    		'a' : '\u0250', # ɐ
+    		'b' : 'q',
+    		'c' : '\u0254', # ɔ
+    		'd' : 'p',
+    		'e' : '\u0258', # ǝ
+    		'f' : '\u025F', # ɟ
+    		'g' : '\u0183', # ƃ
+    		'h' : '\u0265', # ɥ
+    		'i' : '\u0131', # ı
+    		'j' : '\u027E', # ɾ
+    		'k' : '\u029E', # ʞ
+    		'l' : '\u0285', # ʅ
+    		'm' : '\u026F', # ɯ
+    		'n' : 'u', # u
+			'o' : 'o',
+    		'p' : 'd',
+			'q': 'p',
+    		'r' : '\u0279', # ɹ
+			's' : 's',
+    		't' : '\u0287', # ʇ
+    		'u' : 'n',
+    		'v' : '\u028C', # ʌ
+    		'w' : '\u028D', # ʍ
+			'x' : 'x',
+    		'y' : '\u028E', # ʎ
+			'z' : 'z',
+    		'.' : '\u02D9', # ˙
+    		'[' : ']',
+    		'(' : ')',
+    		'{' : '}',
+    		'?' : '\u00BF', # ¿
+    		'!' : '\u00A1', # ¡
+    		"\'" : ',',
+    		'<' : '>',
+    		'_' : '\u203E', # ‾
+    		'"' : '\u201E', # „
+    		'\\' : '\\',
+    		';' : '\u061B', # ؛
+    		'\u203F' : '\u2040', # ‿ --> ⁀
+    		'\u2045' : '\u2046', # ⁅ --> ⁆
+    		'\u2234' : '\u2235', # ∴ --> ∵
+    }
+		final = ""
+		for char in txt.lower():
+			if char not in rot180:
+				continue
+			final += rot180[char]
+		await ctx.send(final)
+
+
 	@commands.command(aliases=["randomnumber"])
 	@commands.cooldown(1,2,commands.BucketType.user)
 	async def random(self,ctx,min:int=1,max:int=10):

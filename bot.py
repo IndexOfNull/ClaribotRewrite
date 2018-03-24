@@ -97,8 +97,12 @@ class Claribot(commands.Bot):
 			except Exception as e:
 				msg = 'Failed to load mod {0}\n{1}: {2}'.format(cog, type(e).__name__, e)
 				print(msg)
-		print('------\n{0}\nShard {1}/{2}{3}------'.format(self.user, self.shard_id, self.shard_count-1, '\nDev Mode: Enabled\n' if self.dev_mode else ''))
-		game = discord.Game(name="rewrite coming, now with less unused commands")
+
+		playing = self.mysql.cursor.execute("SELECT value FROM `bot_data` WHERE var_name='playing'").fetchall()[0]["value"]
+		if not playing:
+			playing = "nothing"
+		print('------\n{0}\nShard {1}/{2}{3}{4}------'.format(self.user, self.shard_id, self.shard_count-1, '\nDev Mode: Enabled\n' if self.dev_mode else '\n',"Playing: "+playing+"\n"))
+		game = discord.Game(name=playing)
 		await self.change_presence(activity=game)
 
 	async def command_help(self,ctx):
@@ -133,6 +137,7 @@ class Claribot(commands.Bot):
 		prefix = prefix_result
 
 		blacklisted = await self.getBlacklisted(message)
+
 		#blacklisted = False
 		if blacklisted and not message.content.lower().startswith(prefix+"blacklist"):
 			print("blacklisted")
