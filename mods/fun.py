@@ -63,7 +63,7 @@ class Fun():
 						continue
 					upload = discord.File(final,"logan.png")
 					await ctx.send(file=upload)
-				await wait.delete()
+			await wait.delete()
 		except discord.errors.Forbidden:
 			msg = (await self.bot.getGlobalMessage(ctx.personality,"no_image_perm"))
 			await wait.edit(content=msg)
@@ -159,7 +159,7 @@ class Fun():
 						continue
 					upload = discord.File(final,"notarobot.png")
 					await ctx.send(file=upload)
-				await wait.delete()
+			await wait.delete()
 		except discord.errors.Forbidden:
 			msg = (await self.bot.getGlobalMessage(ctx.personality,"no_image_perm"))
 			await wait.edit(content=msg)
@@ -198,7 +198,7 @@ class Fun():
 						continue
 					upload = discord.File(final,"feelmyfieri.png")
 					await ctx.send(file=upload)
-				await wait.delete()
+			await wait.delete()
 		except discord.errors.Forbidden:
 			msg = (await self.bot.getGlobalMessage(ctx.personality,"no_image_perm"))
 			await wait.edit(content=msg)
@@ -238,7 +238,7 @@ class Fun():
 						continue
 					upload = discord.File(final,"bandicam.png")
 					await ctx.send(file=upload)
-				await wait.delete()
+			await wait.delete()
 		except discord.errors.Forbidden:
 			msg = (await self.bot.getGlobalMessage(ctx.personality,"no_image_perm"))
 			await wait.edit(content=msg)
@@ -348,7 +348,7 @@ class Fun():
 					upload = discord.File(final,"newfunkymode.png")
 					await channel.send(file=upload)
 					final = None
-				await wait.delete()
+			await wait.delete()
 		except discord.errors.Forbidden:
 			msg = (await self.bot.getGlobalMessage(ctx.personality,"no_image_perm"))
 			await wait.edit(content=msg)
@@ -387,7 +387,7 @@ class Fun():
 						continue
 					upload = discord.File(final,"andknuckles.png")
 					await ctx.send(file=upload)
-				await wait.delete()
+			await wait.delete()
 		except discord.errors.Forbidden:
 			msg = (await self.bot.getGlobalMessage(ctx.personality,"no_image_perm"))
 			await wait.edit(content=msg)

@@ -10,6 +10,22 @@
 
 $help to view this page
 
+Some notes:
+  - Face commands may come back one day, they are a pain in the ass to make and usually don't work too well, so we'll have to see...
+  - I'm hoping to (maybe) add voice chat related commands one day. One day...
+  - $dssonic and $dawae have been removed, they were really never good.
+  - $instantinvite may be added back, likely not unless there's a demand for it.
+  - The old version will not be hosted anymore, so don't ask.
+
+Why is the rewrite better:
+  - We use databases
+  - There's a usable blacklist
+  - You can change the command prefix (so if using $ is an atrocity to you, you can make it a not atrocity)
+  - There's a much better warning system
+  - Image based commands are handled much better
+  - Should be about as fast or faster than the first version
+  - Can utilize sharding, not a big deal though, its not like we're on 2500 servers...
+
 Fun:
   1. Logan Paulify          : $logan <image>
   2. Participation Trophy   : $trophy <user>*
