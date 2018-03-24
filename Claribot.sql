@@ -3,7 +3,7 @@
 -- http://www.phpmyadmin.net
 --
 -- Host: localhost
--- Generation Time: Mar 24, 2018 at 02:37 AM
+-- Generation Time: Mar 24, 2018 at 02:48 AM
 -- Server version: 10.1.13-MariaDB
 -- PHP Version: 5.6.23
 
@@ -29,7 +29,12 @@ SET time_zone = "+00:00";
 CREATE TABLE `blacklist_channels` (
   `server_id` bigint(32) NOT NULL,
   `channel_id` bigint(32) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+
+--
+-- Dumping data for table `blacklist_channels`
+--
+
 
 
 -- --------------------------------------------------------
@@ -41,7 +46,7 @@ CREATE TABLE `blacklist_channels` (
 CREATE TABLE `blacklist_users` (
   `server_id` bigint(20) NOT NULL,
   `user_id` bigint(20) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 
 -- --------------------------------------------------------
 
@@ -50,10 +55,16 @@ CREATE TABLE `blacklist_users` (
 --
 
 CREATE TABLE `bot_data` (
-  `var_name` text NOT NULL,
-  `value` text NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+  `var_name` text CHARACTER SET latin1 NOT NULL,
+  `value` text CHARACTER SET latin1 NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 
+--
+-- Dumping data for table `bot_data`
+--
+
+INSERT INTO `bot_data` (`var_name`, `value`) VALUES
+('playing', 'end my life');
 
 -- --------------------------------------------------------
 
@@ -63,8 +74,12 @@ CREATE TABLE `bot_data` (
 
 CREATE TABLE `personality` (
   `server_id` bigint(32) NOT NULL,
-  `personality` text NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+  `personality` text CHARACTER SET latin1 NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+
+--
+-- Dumping data for table `personality`
+--
 
 
 -- --------------------------------------------------------
@@ -75,8 +90,12 @@ CREATE TABLE `personality` (
 
 CREATE TABLE `prefix` (
   `server_id` bigint(32) NOT NULL,
-  `prefix` text NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+  `prefix` text CHARACTER SET latin1 NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+
+--
+-- Dumping data for table `prefix`
+--
 
 
 -- --------------------------------------------------------
@@ -88,11 +107,11 @@ CREATE TABLE `prefix` (
 CREATE TABLE `warnings` (
   `server_id` bigint(32) NOT NULL,
   `user_id` bigint(32) NOT NULL,
-  `reason` text NOT NULL,
+  `reason` text CHARACTER SET latin1 NOT NULL,
   `warner` bigint(32) NOT NULL,
   `timestamp` bigint(32) NOT NULL,
-  `issue_id` text NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+  `issue_id` text CHARACTER SET latin1 NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;

@@ -41,10 +41,8 @@ class Fun():
 				for url in images:
 					b = await self.bot.funcs.bytes_download_images(ctx,url,images)
 					if b is None:
-						print("One image failed to download")
 						continue
 					elif b is False:
-						print("The one and only failed")
 						return
 					img = Image.open(b).convert("RGBA")
 					w, h = img.size
@@ -270,7 +268,6 @@ class Fun():
 			txt = txt.rotate(22, expand=1)
 			mlwidth, mlheight = d.multiline_textsize(ntext, font=font)
 			xoffset = int(mlheight*0.42045454545455)
-			print(height)
 			image.paste(txt, (393-xoffset,265-mlheight), txt)
 			final = BytesIO()
 			image.save(final,"png")
@@ -320,10 +317,8 @@ class Fun():
 		try:
 			await ctx.trigger_typing()
 			images = await self.get_images(ctx, urls=url, limit=3)
-			print(images)
 			if images:
 				for url in images:
-					print("GOOD")
 					b = await self.bot.funcs.bytes_download_images(ctx,url,images)
 
 					if b is None:

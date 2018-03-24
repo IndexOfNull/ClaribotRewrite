@@ -45,11 +45,9 @@ class Funcs():
 			return (await self.getUTCSeconds(datetime.datetime.utcnow()))
 
 	async def secondsToUTC(self,seconds):
-		print(seconds)
 		return datetime.datetime.fromtimestamp(seconds)
 
 	async def getFormattedTime(self,dt):
-		print(dt)
 		tzconverted = dt.astimezone(tz.tzlocal())
 		return tzconverted.strftime("%Y-%m-%d %H:%M:%S {0}".format(tz.tzlocal().tzname(tzconverted)))
 
@@ -409,7 +407,6 @@ class Funcs():
 				else:
 					urls.append(user.default_avatar_url)
 			img_count += 1
-		print(urls)
 		if len(urls)-img_count > limit:
 			if msg:
 				await channel.send((await self.getGlobalMessage(personality,"file_limit")).format(limit))
@@ -417,7 +414,6 @@ class Funcs():
 			return False
 		img_urls = []
 		check_been_false = False
-		print(urls)
 		if len(urls) == 0:
 			last_image = await self.get_attachment_images(ctx,self.imagecheck,gif)
 			print(last_image)
@@ -481,7 +477,6 @@ class Funcs():
 				return False
 			sql = "SELECT channel_id FROM `blacklist_channels` WHERE channel_id={0}".format(message.channel.id)
 			result = self.cursor.execute(sql).fetchall()
-			print(result)
 			if result:
 				if result[0]["channel_id"] == message.channel.id:
 					blacklisted = True
