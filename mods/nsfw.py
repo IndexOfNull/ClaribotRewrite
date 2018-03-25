@@ -32,6 +32,8 @@ class NSFW():
 		offset = kwargs.pop("offset", randint(0,700))
 		url = "https://backend.deviantart.com/rss.xml?type=deviation&offset={0}&q={1}".format(offset,urllib.parse.quote_plus(query))
 		response = await self.bot.funcs.http_get(url=url)
+		if not response:
+			return
 		root = ET.fromstring(response)
 		channel = root.find("channel")
 		items = channel.findall("item")
@@ -45,42 +47,34 @@ class NSFW():
 				return False
 		if no_no:
 			no_nos = []
-			for post in items:
-				rating = post.find("{http://search.yahoo.com/mrss/}rating").text
-				media = post.find("{http://search.yahoo.com/mrss/}content")
-				mediaurl = media.get("url")
-				link = post.find("link").text
-				if rating == "adult":
-					no_nos.append({"url": mediaurl, "source": link})
-			if len(no_nos) == 0:
-				max_attempts = 3
-				offset = randint(0,60)
-				for i in range(max_attempts):
-					url = "https://backend.deviantart.com/rss.xml?type=deviation&offset={0}&q={1}".format(offset*max_attempts,urllib.parse.quote_plus(query))
-					response = await self.bot.funcs.http_get(url=url)
-					root = ET.fromstring(response)
-					channel = root.find("channel")
-					items2 = channel.findall("item")
-					for post in items2:
-						rating = post.find("{http://search.yahoo.com/mrss/}rating").text
-						media = post.find("{http://search.yahoo.com/mrss/}content")
-						mediaurl = media.get("url")
-						link = post.find("link").text
-						if rating == "adult":
-							no_nos.append({"url": mediaurl, "source": link})
-					if len(no_nos) > 0:
-						break
-			if len(no_nos) > 0:
+			max_attempts = 6
+			for i in range(max_attempts):
+				url = "https://backend.deviantart.com/rss.xml?type=deviation&offset={0}&q={1}".format(offset,urllib.parse.quote_plus(query))
+				response = await self.bot.funcs.http_get(url=url)
+				if response:
+					items = ET.fromstring(response).findall("channel/item")
+					for post in items:
+						if post.find("{http://search.yahoo.com/mrss/}rating").text == "adult":
+							try:
+								mediaurl = post.find("{http://search.yahoo.com/mrss/}content").get("url")
+								source = post.find("link").text
+								no_nos.append({"url": mediaurl, "source": source})
+							except:
+								continue
+			if len(no_nos) > 1:
 				return no_nos[randint(0,len(no_nos)-1)]
 		for i in range(10):
-			random = randint(0,len(items)-1)
-			item = items[random]
-			media = item.find("{http://search.yahoo.com/mrss/}content")
-			rating = item.find("{http://search.yahoo.com/mrss/}rating")
-			link = item.find("link").text
-			if media.get("medium") == "image":
-				mediaurl = media.get("url")
-				return {"url": mediaurl, "source": link}
+			try:
+				random = randint(0,len(items)-1)
+				item = items[random]
+				mediaurl = item.find("{http://search.yahoo.com/mrss/}content").get("url")
+				rating = item.find("{http://search.yahoo.com/mrss/}rating")
+				link = item.find("link").text
+				if item.find("{http://search.yahoo.com/mrss/}content").get("medium") == "image":
+					#mediaurl = media.get("url")
+					return {"url": mediaurl, "source": link}
+			except Exception as e:
+				continue
 		return False
 
 	@commands.command(aliases=["da"])

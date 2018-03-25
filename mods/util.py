@@ -25,7 +25,7 @@ class Utility():
 	@commands.guild_only()
 	async def blacklist(self,ctx):
 	    if ctx.invoked_subcommand is None:
-	        await ctx.send('Invalid subcommand passed...')
+	        await ctx.send('Valid subcommands are `channel, user, list`')
 
 
 
@@ -37,30 +37,67 @@ class Utility():
 		personality = ctx.personality
 		msg = (await self.getGlobalMessage(personality,"command_wait"))
 		wait = await ctx.send(msg)
+		try:
+
+			await ctx.channel.trigger_typing()
+			if channel is None:
+				print("no channel")
+				channel = ctx.channel
+			if channel not in ctx.message.guild.channels:
+				return
+			blacklisted = False
+			sql = "SELECT channel_id FROM `blacklist_channels` WHERE channel_id={0}".format(channel.id)
+			result = self.cursor.execute(sql).fetchall()
+			print(result)
+			if result:
+				print(str(result[0]["channel_id"]) + " == " + str(channel.id))
+				if result[0]["channel_id"] == channel.id:
+					blacklisted = True
+			if blacklisted is True:
+				sql = "DELETE FROM `blacklist_channels` WHERE channel_id={0}".format(channel.id)
+				msg = (await self.getCommandMessage(personality, ctx, "remove_blacklist", "blacklist-channel")).format(channel.mention)
+			else:
+				sql = "INSERT INTO `blacklist_channels` (`server_id`, `channel_id`) VALUES ('{0}', '{1}')".format(channel.guild.id,channel.id)
+				msg = (await self.getCommandMessage(personality, ctx, "added_blacklist", "blacklist-channel")).format(channel.mention)
+			result = self.cursor.execute(sql)
+			self.cursor.commit()
+			await wait.delete()
+			await ctx.send(msg)
+		except Exception as e:
+			self.cursor.rollback()
+			await wait.edit("`{0}`".format(e))
+			return False
+
+	@blacklist.command()
+	@commands.cooldown(1,3,commands.BucketType.guild)
+	@commands.guild_only()
+	@checks.mod_or_perm(mute_members=True)
+	async def list(self,ctx):
+		personality = ctx.personality
+		msg = (await self.getGlobalMessage(personality,"command_wait"))
+		wait = await ctx.send(msg)
 		await ctx.channel.trigger_typing()
-		if channel is None:
-			print("no channel")
-			channel = ctx.channel
-		if channel not in ctx.message.guild.channels:
-			return
-		blacklisted = False
-		sql = "SELECT channel_id FROM `blacklist_channels` WHERE channel_id={0}".format(channel.id)
-		result = self.cursor.execute(sql).fetchall()
-		print(result)
-		if result:
-			print(str(result[0]["channel_id"]) + " == " + str(channel.id))
-			if result[0]["channel_id"] == channel.id:
-				blacklisted = True
-		if blacklisted is True:
-			sql = "DELETE FROM `blacklist_channels` WHERE channel_id={0}".format(channel.id)
-			msg = (await self.getCommandMessage(personality, ctx, "remove_blacklist", "blacklist-channel")).format(channel.mention)
-		else:
-			sql = "INSERT INTO `blacklist_channels` (`server_id`, `channel_id`) VALUES ('{0}', '{1}')".format(channel.guild.id,channel.id)
-			msg = (await self.getCommandMessage(personality, ctx, "added_blacklist", "blacklist-channel")).format(channel.mention)
-		result = self.cursor.execute(sql)
-		self.cursor.commit()
-		await wait.delete()
-		await ctx.send(msg)
+		try:
+			sql = "SELECT channel_id FROM `blacklist_channels` WHERE server_id={0.id}".format(ctx.message.guild)
+			result = self.cursor.execute(sql).fetchall()
+			if result:
+				final = ":scroll: Listing blacklisted channels\n"
+				entry = "\n  - {0.mention}"
+				for channel in result:
+					print(channel[0])
+					final += entry.format(self.bot.get_channel(channel["channel_id"]))
+				await wait.delete()
+				await ctx.send(final)
+			else:
+				msg = (await self.getCommandMessage(personality,ctx,"error","blacklist-list-channels"))
+				await wait.delete()
+				await ctx.send(msg)
+		except Exception as e:
+			self.cursor.rollback()
+			print(e)
+			await ctx.send("`{0}`".format(e))
+
+
 
 	@blacklist.command(pass_context=True)
 	@commands.cooldown(1,3,commands.BucketType.guild)
@@ -70,59 +107,70 @@ class Utility():
 		personality = ctx.personality
 		msg = (await self.getGlobalMessage(personality,"command_wait"))
 		wait = await ctx.send(msg)
-		await ctx.channel.trigger_typing()
-		blacklisted = False
-		sql = "SELECT user_id FROM `blacklist_users` WHERE user_id={0} AND server_id={1}".format(user.id,ctx.message.guild.id)
-		result = self.cursor.execute(sql).fetchall()
-		if result:
-			if result[0]["user_id"] == user.id:
-				blacklisted = True
-		if blacklisted is True:
-			sql = "DELETE FROM `blacklist_users` WHERE user_id={0} AND server_id={1}".format(user.id,ctx.message.guild.id)
-			msg = (await self.getCommandMessage(personality, ctx, "remove_blacklist", "blacklist-user")).format(user.name)
-		else:
-			sql = "INSERT INTO `blacklist_users` (`server_id`, `user_id`) VALUES ('{0}', '{1}')".format(ctx.channel.guild.id,user.id)
-			msg = (await self.getCommandMessage(personality, ctx, "added_blacklist", "blacklist-user")).format(user.name)
-		result = self.cursor.execute(sql)
-		self.cursor.commit()
-		await wait.delete()
-		await ctx.send(msg)
+		try:
+			await ctx.channel.trigger_typing()
+			blacklisted = False
+			sql = "SELECT user_id FROM `blacklist_users` WHERE user_id={0} AND server_id={1}".format(user.id,ctx.message.guild.id)
+			result = self.cursor.execute(sql).fetchall()
+			if result:
+				if result[0]["user_id"] == user.id:
+					blacklisted = True
+			if blacklisted is True:
+				sql = "DELETE FROM `blacklist_users` WHERE user_id={0} AND server_id={1}".format(user.id,ctx.message.guild.id)
+				msg = (await self.getCommandMessage(personality, ctx, "remove_blacklist", "blacklist-user")).format(user.name)
+			else:
+				sql = "INSERT INTO `blacklist_users` (`server_id`, `user_id`) VALUES ('{0}', '{1}')".format(ctx.channel.guild.id,user.id)
+				msg = (await self.getCommandMessage(personality, ctx, "added_blacklist", "blacklist-user")).format(user.name)
+			result = self.cursor.execute(sql)
+			self.cursor.commit()
+			await wait.delete()
+			await ctx.send(msg)
+		except Exception as e:
+			await wait.edit("`{0}`".format(e))
+			self.cursor.rollback()
+			return False
 
 	@commands.command(pass_context=True)
 	@commands.cooldown(1,3,commands.BucketType.guild)
 	@commands.guild_only()
 	@checks.admin_or_perm(manage_server=True)
 	async def prefix(self, ctx, *, txt:str=None):
-		personality = ctx.personality
-		if len(txt) > 10:
-			await ctx.send((await self.getCommandMessage(personality,ctx,"input_too_big")).format(10))
-			return
-		msg = (await self.getGlobalMessage(personality,"command_wait"))
-		wait = await ctx.send(msg)
-		await ctx.channel.trigger_typing()
-		sql = "SELECT prefix FROM `prefix` WHERE server_id={0}"
-		sql = sql.format(ctx.message.guild.id)
-		result = self.cursor.execute(sql).fetchall()
-		if len(result) == 0:
-			server_prefix = "$"
-		else:
-			server_prefix = result[0]["prefix"]
-		if txt is None:
-			msg = (await self.getCommandMessage(personality, ctx, "current_prefix")).format(server_prefix)
-			await wait.delete()
-			await ctx.send(msg)
-			return
-		else:
-			if txt.lower() != server_prefix:
-				if len(result) == 0:
-					sql = "INSERT INTO `prefix` (`server_id`, `prefix`) VALUES ('{0}', :prefix)".format(ctx.message.guild.id)
-				else:
-					sql = 'UPDATE `prefix` SET prefix= :prefix WHERE server_id={0}'.format(ctx.message.guild.id)
-				result = self.cursor.execute(sql, {"prefix": txt.lower()})
-				self.cursor.commit()
-			msg = (await self.getCommandMessage(personality, ctx, "set_prefix")).format(txt.lower())
-			await wait.delete()
-			await ctx.send(msg)
+		try:
+			personality = ctx.personality
+			if txt:
+				if len(txt) > 10:
+					await ctx.send((await self.getCommandMessage(personality,ctx,"input_too_big")).format(10))
+					return
+			msg = (await self.getGlobalMessage(personality,"command_wait"))
+			wait = await ctx.send(msg)
+			await ctx.channel.trigger_typing()
+			sql = "SELECT prefix FROM `prefix` WHERE server_id={0}"
+			sql = sql.format(ctx.message.guild.id)
+
+			result = self.cursor.execute(sql).fetchall()
+			if not result:
+				server_prefix = "$"
+			else:
+				server_prefix = result[0]["prefix"]
+			if txt is None:
+				msg = (await self.getCommandMessage(personality, ctx, "current_prefix")).format(server_prefix)
+				await wait.delete()
+				await ctx.send(msg)
+				return
+			else:
+				if txt.lower() != server_prefix:
+					if not result:
+						sql = "INSERT INTO `prefix` (`server_id`, `prefix`) VALUES ('{0}', :prefix)".format(ctx.message.guild.id)
+					else:
+						sql = 'UPDATE `prefix` SET prefix= :prefix WHERE server_id={0}'.format(ctx.message.guild.id)
+					result = self.cursor.execute(sql, {"prefix": txt.lower()})
+					self.cursor.commit()
+				msg = (await self.getCommandMessage(personality, ctx, "set_prefix")).format(txt.lower())
+				await wait.delete()
+				await ctx.send(msg)
+		except Exception as e:
+			await ctx.send("`{0}`".format(e))
+			self.cursor.rollback()
 
 	@commands.command()
 	@commands.cooldown(1,3,commands.BucketType.guild)
@@ -153,9 +201,10 @@ class Utility():
 			await ctx.send(msg)
 		except Exception as e:
 			await wait.edit(content="`{0}`".format(e))
+			self.cursor.rollback()
 			print(e)
 
-	@commands.command()
+	@commands.command(aliases=["warninghistory"])
 	@commands.cooldown(1,3,commands.BucketType.guild)
 	@commands.guild_only()
 	@checks.mod_or_perm(manage_messages=True)
@@ -188,6 +237,7 @@ class Utility():
 			await wait.delete()
 		except Exception as e:
 			await wait.edit(content="`{0}`".format(e))
+			self.cursor.rollback()
 			print(e)
 
 	@commands.command()
@@ -220,6 +270,7 @@ class Utility():
 				await ctx.send((await self.getCommandMessage(ctx.personality,ctx,"error")).format(ctx.message.author,user))
 			await wait.delete()
 		except Exception as e:
+			self.cursor.rollback()
 			await wait.edit(content="`{0}`".format(e))
 			print(e)
 
@@ -243,6 +294,7 @@ class Utility():
 			self.cursor.commit()
 			await ctx.send((await self.getCommandMessage(ctx.personality,ctx,"deleted")).format(warning_id))
 		except Exception as e:
+			self.cursor.rollback()
 			await ctx.send(content="`{0}`".format(e))
 			print(e)
 
@@ -256,36 +308,41 @@ class Utility():
 		personality = ctx.personality
 		msg = (await self.getGlobalMessage(personality,"command_wait"))
 		wait = await ctx.send(msg)
-		await ctx.channel.trigger_typing()
-		sql = "SELECT personality FROM `personality` WHERE server_id={0}".format(ctx.message.guild.id)
-		result = self.cursor.execute(sql).fetchall()
-		if txt is None:
-			if len(result) == 0:
-				personality = "default"
-			else:
-				personality = result[0]["personality"]
-			msg = (await self.getCommandMessage(personality, ctx, "current_personality")).format(personality)
-			await wait.delete()
-			await ctx.send(msg)
-		else:
-			personalities = self.bot.messages
-			keys = personalities.keys()
-			if not txt.lower() in keys:
-				formatted_list =  ', '.join(map(str, list(keys)))
-				msg = (await self.getCommandMessage(personality, ctx, "invalid_personality")).format(formatted_list)
+		try:
+			await ctx.channel.trigger_typing()
+			sql = "SELECT personality FROM `personality` WHERE server_id={0}".format(ctx.message.guild.id)
+			result = self.cursor.execute(sql).fetchall()
+			if txt is None:
+				if len(result) == 0:
+					personality = "default"
+				else:
+					personality = result[0]["personality"]
+				msg = (await self.getCommandMessage(personality, ctx, "current_personality")).format(personality)
 				await wait.delete()
 				await ctx.send(msg)
-				return
-			if personality != txt.lower():
-				if len(result) == 0:
-					sql = "INSERT INTO `personality` (`server_id`, `personality`) VALUES ('{0}', '{1}')".format(ctx.message.guild.id,txt.lower())
-				else:
-					sql = 'UPDATE `personality` SET personality={0} WHERE server_id={1}'.format('"'+txt.lower()+'"',ctx.message.guild.id)
-				result = self.cursor.execute(sql)
-				self.cursor.commit()
-			msg = (await self.getCommandMessage(personality, ctx, "set_personality")).format(txt.lower())
-			await wait.delete()
-			await ctx.send(msg)
+			else:
+				personalities = self.bot.messages
+				keys = personalities.keys()
+				if not txt.lower() in keys:
+					formatted_list =  ', '.join(map(str, list(keys)))
+					msg = (await self.getCommandMessage(personality, ctx, "invalid_personality")).format(formatted_list)
+					await wait.delete()
+					await ctx.send(msg)
+					return
+				if personality != txt.lower():
+					if len(result) == 0:
+						sql = "INSERT INTO `personality` (`server_id`, `personality`) VALUES ('{0}', '{1}')".format(ctx.message.guild.id,txt.lower())
+					else:
+						sql = 'UPDATE `personality` SET personality={0} WHERE server_id={1}'.format('"'+txt.lower()+'"',ctx.message.guild.id)
+					result = self.cursor.execute(sql)
+					self.cursor.commit()
+				msg = (await self.getCommandMessage(personality, ctx, "set_personality")).format(txt.lower())
+				await wait.delete()
+				await ctx.send(msg)
+		except Exception as e:
+			await wait.edit("`{0}`".format(e))
+			self.cursor.rollback()
+			return False
 
 	@commands.command(pass_context=True,hidden=True)
 	@checks.is_bot_owner()
@@ -341,14 +398,18 @@ class Utility():
 	@checks.is_bot_owner()
 	@commands.cooldown(1,5)
 	async def status(self, ctx, *, motd:str):
-		await self.bot.change_presence(activity=discord.Game(name=motd))
-		sql = "UPDATE `bot_data` SET value= :motd WHERE var_name='playing'"
-		self.cursor.execute(sql, {"motd": motd})
-		self.cursor.commit()
-		msg = await ctx.message.channel.send(await self.getCommandMessage(ctx.personality,ctx,"success"))
-		await asyncio.sleep(5)
-		await msg.delete()
-		print("MOTD changed to: " + motd)
+		try:
+			await self.bot.change_presence(activity=discord.Game(name=motd))
+			sql = "UPDATE `bot_data` SET value= :motd WHERE var_name='playing'"
+			self.cursor.execute(sql, {"motd": motd})
+			self.cursor.commit()
+			msg = await ctx.message.channel.send(await self.getCommandMessage(ctx.personality,ctx,"success"))
+			await asyncio.sleep(5)
+			await msg.delete()
+			print("MOTD changed to: " + motd)
+		except Exception as e:
+			self.cursor.rollback()
+			await ctx.send("`{0}`".format(e))
 
 def setup(bot):
 	bot.add_cog(Utility(bot))

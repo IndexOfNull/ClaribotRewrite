@@ -74,11 +74,12 @@ Blacklist:
   1. Blacklist              : $blacklist <type> <target>
     1.1 (^)Blacklist Channel   : $blacklist channel <channel>
     1.2 (~)Blacklist User      : $blacklist user <user>*
+    1.3 (~)List Channels       : $blacklist list
 
 Owner Commands (all require bot owner privileges):
   1. Eval                   : $eval <code>*
   2. Playing Status         : $status <text>*
 
 TODO:
-  1. Make a blacklist "list" command so users can see blacklisted channels
+  1. Make a blacklist "list" command so users can see blacklisted channels √ (done, actually it turned out to be really easy)
   2. Make a level system

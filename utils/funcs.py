@@ -459,35 +459,43 @@ class Funcs():
 
 
 	async def getPersonality(self,message):
-		personality = "default"
-		if isinstance(message.channel, discord.TextChannel) is True:
-			sql = "SELECT personality FROM `personality` WHERE server_id={0}".format(message.guild.id)
-			result = self.cursor.execute(sql).fetchall()
-			if result:
-				personality = result[0]["personality"]
-		return personality
-
-	async def getBlacklisted(self,message):
-		blacklisted = False
-
-		if isinstance(message.channel, discord.TextChannel) is True:
-			bypass = checks.is_admin(message)
-			#print(bypass)
-			if bypass:
-				return False
-			sql = "SELECT channel_id FROM `blacklist_channels` WHERE channel_id={0}".format(message.channel.id)
-			result = self.cursor.execute(sql).fetchall()
-			if result:
-				if result[0]["channel_id"] == message.channel.id:
-					blacklisted = True
-			if not result:
-				sql = "SELECT user_id FROM `blacklist_users` WHERE user_id={0} AND server_id={1}".format(message.author.id,message.guild.id)
+		try:
+			personality = "default"
+			if isinstance(message.channel, discord.TextChannel) is True:
+				sql = "SELECT personality FROM `personality` WHERE server_id={0}".format(message.guild.id)
 				result = self.cursor.execute(sql).fetchall()
 				if result:
-					if result[0]["user_id"] == message.author.id:
-						blacklisted = True
+					personality = result[0]["personality"]
+			return personality
+		except Exception as e:
+			self.cursor.rollback()
+			return "default"
 
-		return blacklisted
+	async def getBlacklisted(self,message):
+		try:
+			blacklisted = False
+
+			if isinstance(message.channel, discord.TextChannel) is True:
+				bypass = checks.is_admin(message)
+				#print(bypass)
+				if bypass:
+					return False
+				sql = "SELECT channel_id FROM `blacklist_channels` WHERE channel_id={0}".format(message.channel.id)
+				result = self.cursor.execute(sql).fetchall()
+				if result:
+					if result[0]["channel_id"] == message.channel.id:
+						blacklisted = True
+				if not result:
+					sql = "SELECT user_id FROM `blacklist_users` WHERE user_id={0} AND server_id={1}".format(message.author.id,message.guild.id)
+					result = self.cursor.execute(sql).fetchall()
+					if result:
+						if result[0]["user_id"] == message.author.id:
+							blacklisted = True
+
+			return blacklisted
+		except Exception as e:
+			self.cursor.rollback()
+			return False
 
 	async def getGlobalMessage(self,personality,key):
 		#Check to see if there will be anything wrong with getting the value, if there is have it fallback to the defaults
@@ -541,19 +549,23 @@ class Funcs():
 		return self.bot.messages[personality]["commands"][name][key]
 
 	async def getPrefix(self,message):
-		if self.bot.dev_mode == True:
-			prefix = ","
-		else:
-			prefix = "$"
-		if isinstance(message.channel, discord.TextChannel) is True and message.content.startswith(prefix+"prefix") is False:
+		try:
+			if self.bot.dev_mode == True:
+				prefix = ","
+			else:
+				prefix = "$"
+			if isinstance(message.channel, discord.TextChannel) is True and message.content.startswith(prefix+"prefix") is False:
 
-			sql = "SELECT prefix FROM `prefix` WHERE server_id={0}"
-			sql = sql.format(message.guild.id)
-			result = self.cursor.execute(sql).fetchall()
-			if result:
-				prefix = result[0]["prefix"].lower()
-		#print(prefix)
-		return prefix
+				sql = "SELECT prefix FROM `prefix` WHERE server_id={0}"
+				sql = sql.format(message.guild.id)
+				result = self.cursor.execute(sql).fetchall()
+				if result:
+					prefix = result[0]["prefix"].lower()
+			#print(prefix)
+			return prefix
+		except Exception as e:
+			self.cursor.rollback()
+			return "$"
 
 	@asyncio.coroutine
 	def get_prefix2(self, message, inputprefix):

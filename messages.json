@@ -77,6 +77,9 @@
       },
       "status": {
         "success": ":white_check_mark: My playing status has been updated successfully."
+      },
+      "blacklist-list-channels": {
+        "error": ":warning: There are no channels blacklisted or something went wrong."
       }
     }
   },
