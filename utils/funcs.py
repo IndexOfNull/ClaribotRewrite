@@ -184,12 +184,12 @@ class Funcs():
 			self.cursor.commit()
 			beforeLevel = await self.tier_from_points(result[0]["points"])
 			afterLevel = await self.tier_from_points(final_points)
-			print("{0}>{1}".format(afterLevel,beforeLevel))
+			#print("{0}>{1}".format(afterLevel,beforeLevel))
 			if afterLevel > beforeLevel:
-				print("LEVEL UP!")
+				#print("LEVEL UP!")
 				if message:
 					await message.channel.send((await self.getGlobalMessage(await self.getPersonality(message.guild),"level_up")).format(user,afterLevel))
-			print("done")
+			#print("done")
 			return {"before": result[0]["points"],"after": final_points}
 		except Exception as e:
 			print(e)

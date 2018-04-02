@@ -64,6 +64,10 @@ Admin (tools for admins/mods):
   3. Delete Warning         : $delwarning <warning_id>*
   4. Get Warning            : $getwarning <warning_id>*
 
+SpicyPoints Commands:
+  1. Get a user's points     : $points <user>
+  2. Get a user's level      : $level <user>
+
 NSFW (must be used in an NSFW channel):
   1. DeviantArt             : $da <query>
   2. Furry                  : $furry <query>

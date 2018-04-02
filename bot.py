@@ -132,7 +132,7 @@ class Claribot(commands.Bot):
 		dice = randint(1,3)
 		user = message.author
 		if dice == 1:
-			print("handling points")
+			#print("handling points")
 			current_time = await self.funcs.getUTCNow()
 			points_row = await self.funcs.get_points(user,message.guild)
 			#print(str(points_row["points"]) + ", " + str(points_row["timestamp"]))
@@ -158,7 +158,7 @@ class Claribot(commands.Bot):
 						msg_count += 1
 				async for elem in message.channel.history(limit=25,before=message).filter(predicate):
 					msg_count += 1
-				print("giving points")
+				#print("giving points")
 				await self.funcs.give_points(user,20+int(0.4*msg_count),message.guild,message)
 				return
 			print("Did not meet all requirements")
