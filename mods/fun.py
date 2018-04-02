@@ -28,6 +28,90 @@ class Fun():
 		except Exception as e:
 			print("oh no, evan died")
 
+	@commands.command(aliases=["thisissickening"])
+	@commands.cooldown(1,3,commands.BucketType.guild)
+	async def maxmoefoe(self,ctx, *url):
+		if not url:
+			url = None
+		wait = await ctx.send((await self.bot.funcs.getGlobalMessage(ctx.personality,"command_wait")))
+		try:
+			await ctx.trigger_typing()
+			images = await self.get_images(ctx, urls=url, limit=3)
+			if images:
+				for url in images:
+					b = await self.bot.funcs.bytes_download_images(ctx,url,images)
+					if b is None:
+						continue
+					elif b is False:
+						return
+					img = Image.open(b).convert("RGBA")
+					w, h = img.size
+					stop = Image.open("resource/img/OISTOP.png").convert("RGBA")
+					wresize, hresize = int(w/1.5), int(h/1.25)
+					stop.thumbnail((wresize, hresize))
+
+					rw, rh = stop.size
+					img.paste(stop, (10,h-rh), stop)
+					final = BytesIO()
+					img.save(final,"png")
+					final.seek(0)
+					if sys.getsizeof(final) > 8388608:
+						msg = (await self.bot.getGlobalMessage(ctx.personality,"final_upload_too_big"))
+						await ctx.send(msg)
+						continue
+					upload = discord.File(final,"thisissickening.png")
+					await ctx.send(file=upload)
+			await wait.delete()
+		except discord.errors.Forbidden:
+			msg = (await self.bot.getGlobalMessage(ctx.personality,"no_image_perm"))
+			await wait.edit(content=msg)
+		except Exception as e:
+			await wait.edit(content="`{0}`".format(e))
+			print(e)
+			#ignored, notification of error will be handled by bot.py
+
+	@commands.command(aliases=["itstimetostop"])
+	@commands.cooldown(1,3,commands.BucketType.guild)
+	async def frank(self,ctx, *url):
+		if not url:
+			url = None
+		wait = await ctx.send((await self.bot.funcs.getGlobalMessage(ctx.personality,"command_wait")))
+		try:
+			await ctx.trigger_typing()
+			images = await self.get_images(ctx, urls=url, limit=3)
+			if images:
+				for url in images:
+					b = await self.bot.funcs.bytes_download_images(ctx,url,images)
+					if b is None:
+						continue
+					elif b is False:
+						return
+					img = Image.open(b).convert("RGBA")
+					w, h = img.size
+					stop = Image.open("resource/img/TIMETOSTOP.png").convert("RGBA")
+					wresize, hresize = int(w/1.5), int(h/1.25)
+					stop.thumbnail((wresize, hresize))
+
+					rw, rh = stop.size
+					img.paste(stop, (w-rw-10,h-rh), stop)
+					final = BytesIO()
+					img.save(final,"png")
+					final.seek(0)
+					if sys.getsizeof(final) > 8388608:
+						msg = (await self.bot.getGlobalMessage(ctx.personality,"final_upload_too_big"))
+						await ctx.send(msg)
+						continue
+					upload = discord.File(final,"thisissickening.png")
+					await ctx.send(file=upload)
+			await wait.delete()
+		except discord.errors.Forbidden:
+			msg = (await self.bot.getGlobalMessage(ctx.personality,"no_image_perm"))
+			await wait.edit(content=msg)
+		except Exception as e:
+			await wait.edit(content="`{0}`".format(e))
+			print(e)
+			#ignored, notification of error will be handled by bot.py
+
 	@commands.command(aliases=["loganpaul"])
 	@commands.cooldown(1,3,commands.BucketType.guild)
 	async def logan(self,ctx, *url):
@@ -483,6 +567,28 @@ class Fun():
 		except Exception as e:
 			await ctx.send(content="`{0}`".format(e))
 			print(e)
+
+	@commands.command()
+	@commands.cooldown(1,3,commands.BucketType.guild)
+	async def wholesome(self,ctx,user:discord.User=None):
+		if user is None:
+			user = ctx.message.author
+		try:
+			await ctx.trigger_typing()
+			url = "https://spreadsheets.google.com/feeds/list/1eEa2ra2yHBXVZ_ctH4J15tFSGEu-VTSunsrvaCAV598/od6/public/values?alt=json"
+			response = await self.bot.funcs.http_get_json(url=url)
+			if not response:
+				return
+			if "feed" in response:
+				entries = response["feed"]["entry"]
+				entry = entries[randint(0,len(entries)-1)]
+				text = entry["title"]["$t"]
+				await ctx.send(user.mention + " " + text)
+				return
+			await ctx.send(await self.getGlobalMessage(ctx.personality,"api_error"))
+		except Exception as e:
+			ctx.send("`{0}`".format(e))
+			return
 
 	@commands.command()
 	@commands.cooldown(1,2,commands.BucketType.user)

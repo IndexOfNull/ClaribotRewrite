@@ -21,9 +21,13 @@ class NSFW():
 		furry = kwargs.pop("furry",False)
 		ctx = kwargs.pop("ctx",None)
 		no_no = False
-		if query.startswith(await self.bot.funcs.b64decode(self.sure)):
+		no = (await self.bot.funcs.b64decode(self.sure))
+		if query.startswith(no) or query == no:
 			no_no = True
-			query = query.replace(await self.bot.funcs.b64decode(self.sure)+" ","",1)
+			if query == no:
+				query = ""
+			else:
+				query = query.replace(await self.bot.funcs.b64decode(self.sure)+" ","",1)
 			if ctx:
 				if isinstance(ctx.message.channel, discord.TextChannel):
 					await ctx.message.delete()
@@ -48,7 +52,9 @@ class NSFW():
 		if no_no:
 			no_nos = []
 			max_attempts = 6
+			offset-=60
 			for i in range(max_attempts):
+				offset+=60
 				url = "https://backend.deviantart.com/rss.xml?type=deviation&offset={0}&q={1}".format(offset,urllib.parse.quote_plus(query))
 				response = await self.bot.funcs.http_get(url=url)
 				if response:
@@ -56,7 +62,8 @@ class NSFW():
 					for post in items:
 						if post.find("{http://search.yahoo.com/mrss/}rating").text == "adult":
 							try:
-								mediaurl = post.find("{http://search.yahoo.com/mrss/}content").get("url")
+								mediaurl = post.find("{http://search.yahoo.com/mrss/}content")
+								mediaurl = mediaurl.get("url")
 								source = post.find("link").text
 								no_nos.append({"url": mediaurl, "source": source})
 							except:
@@ -67,9 +74,11 @@ class NSFW():
 			try:
 				random = randint(0,len(items)-1)
 				item = items[random]
-				mediaurl = item.find("{http://search.yahoo.com/mrss/}content").get("url")
+				mediaurl = item.find("{http://search.yahoo.com/mrss/}content")
+				mediaurl = mediaurl.get("url")
 				rating = item.find("{http://search.yahoo.com/mrss/}rating")
-				link = item.find("link").text
+				link = item.find("link")
+				link = link.text
 				if item.find("{http://search.yahoo.com/mrss/}content").get("medium") == "image":
 					#mediaurl = media.get("url")
 					return {"url": mediaurl, "source": link}

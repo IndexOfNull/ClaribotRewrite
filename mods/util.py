@@ -344,6 +344,26 @@ class Utility():
 			self.cursor.rollback()
 			return False
 
+	@commands.command()
+	@commands.cooldown(1,3,commands.BucketType.user)
+	async def level(self,ctx,user:discord.User=None):
+		try:
+			if user is None:
+				user = ctx.message.author
+			await ctx.send(":hot_pepper: " + (user.mention + " Your" if user == ctx.message.author else "***{0.name}#{0.discriminator}'s***".format(user)) + " spicy level is {0}.".format(await self.bot.funcs.tier_from_points((await self.bot.funcs.get_points(user,ctx.guild))["points"])))
+		except Exception as e:
+			ctx.send("`{0}`".format(e))
+
+	@commands.command()
+	@commands.cooldown(1,3,commands.BucketType.user)
+	async def points(self,ctx,user:discord.User=None):
+		try:
+			if user is None:
+				user = ctx.message.author
+			await ctx.send(":hot_pepper: " + (user.mention + " You have" if user == ctx.message.author else "***{0.name}#{0.discriminator}*** has".format(user)) + " {0} spicy points.".format((await self.bot.funcs.get_points(user,ctx.guild))["points"]))
+		except Exception as e:
+			ctx.send("`{0}`".format(e))
+
 	@commands.command(pass_context=True,hidden=True)
 	@checks.is_bot_owner()
 	@commands.cooldown(1,5)
@@ -393,6 +413,7 @@ class Utility():
 			result = await result
 		#"```markdown\nUSE THIS WITH EXTREME CAUTION\n\nEval() Results\n=========\n\n> " + python.format(result)) + "\n```"
 		await ctx.message.channel.send(python.format(result))
+
 
 	@commands.command(pass_context=True,aliases=["playing"])
 	@checks.is_bot_owner()

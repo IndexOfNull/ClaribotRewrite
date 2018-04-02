@@ -24,7 +24,8 @@
       "missing_image_attachments": ":no_entry: Please input url(s){0}or attachment(s).",
       "download_fail": ":warning: I was unable to download your image.",
       "api_error": ":warning: An API error occured.",
-      "cooldown": ":watch: This command needs some time before being used again."
+      "cooldown": ":watch: This command needs some time before being used again.",
+      "level_up": "{0.mention} :hot_pepper: Your spicy level is now {1}"
     },
     "commands": {
       "prefix": {

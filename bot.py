@@ -12,6 +12,7 @@ import discord
 from utils.funcs import Funcs
 from utils import checks
 import time
+from random import *
 
 modules = [
 "mods.util",
@@ -19,6 +20,8 @@ modules = [
 "mods.misc",
 "mods.nsfw"
 ]
+
+
 
 current_milli_time = lambda: int(round(time.time() * 1000))
 
@@ -125,6 +128,42 @@ class Claribot(commands.Bot):
 		done_time = date.datetime().microsecond / 1000
 		print("Done in {0}ms".format(done_time-current_time))
 
+	async def handle_points(self,message):
+		dice = randint(1,3)
+		user = message.author
+		if dice == 1:
+			print("handling points")
+			current_time = await self.funcs.getUTCNow()
+			points_row = await self.funcs.get_points(user,message.guild)
+			#print(str(points_row["points"]) + ", " + str(points_row["timestamp"]))
+			good = False
+			is_none = False
+			if points_row is False:
+				print("ERROR")
+				return
+			if points_row:
+				good = True
+				if "no_row" in points_row:
+					is_none = True
+			if good:
+				msg_count = 0
+				def predicate(msg):
+					return msg.author.id == message.author.id and message.author.bot is False
+				if not is_none:
+					last_time = await self.funcs.secondsToUTC(points_row["timestamp"])
+					time_dif = current_time - points_row["timestamp"]
+					if not time_dif > 3600:
+						return
+					async for elem in message.channel.history(limit=50,around=last_time).filter(predicate):
+						msg_count += 1
+				async for elem in message.channel.history(limit=25,before=message).filter(predicate):
+					msg_count += 1
+				print("giving points")
+				await self.funcs.give_points(user,20+int(0.4*msg_count),message.guild,message)
+				return
+			print("Did not meet all requirements")
+
+
 
 	async def on_message(self, message):
 		await self.wait_until_ready()
@@ -135,7 +174,8 @@ class Claribot(commands.Bot):
 			return
 		if message.author.bot:
 			return
-
+		if isinstance(message.channel, discord.TextChannel):
+			await self.handle_points(message)
 
 		prefix_result = await self.funcs.getPrefix(message) #self.get_prefixes(message), could be used for database config
 		prefix = prefix_result
@@ -144,7 +184,6 @@ class Claribot(commands.Bot):
 
 		#blacklisted = False
 		if blacklisted and not message.content.lower().startswith(prefix+"blacklist"):
-			print("blacklisted")
 			return
 
 		check = True
@@ -177,7 +216,7 @@ class Claribot(commands.Bot):
 	async def on_command_error(self, ctx, e):
 		personality = await self.funcs.getPersonality(ctx.message)
 		if isinstance(e, commands.CommandNotFound):
-			print("no command")
+			return
 		elif isinstance(e, commands.CommandOnCooldown):
 			msg = (await self.funcs.getGlobalMessage(personality,"cooldown"))
 			await ctx.send(msg)

@@ -4,3 +4,4 @@ claribot_*.log
 Pipfile
 Pipfile.lock
 bot.json
+equations.txt

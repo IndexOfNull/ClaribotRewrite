@@ -45,7 +45,7 @@ class Funcs():
 			return (await self.getUTCSeconds(datetime.datetime.utcnow()))
 
 	async def secondsToUTC(self,seconds):
-		return datetime.datetime.fromtimestamp(seconds)
+		return datetime.datetime.utcfromtimestamp(seconds)
 
 	async def getFormattedTime(self,dt):
 		tzconverted = dt.astimezone(tz.tzlocal())
@@ -160,6 +160,67 @@ class Funcs():
 		except asyncio.TimeoutError:
 			return False
 		except Exception as e:
+			return False
+
+	async def get_tier_points(self,tier:int):
+		return (684 + (684*[level-1]))-684
+
+	async def tier_from_points(self,points:int):
+		return abs(int((((points - 684)/684))+2))
+
+	async def give_points(self,user,points:int,server,message=None):
+		try:
+			sql = "SELECT points FROM `points` WHERE user_id={0.id} AND server_id={1.id}".format(user,server)
+			result = self.cursor.execute(sql).fetchall()
+
+			if not result:
+				final_points = points
+				sql = "INSERT INTO `points` (`server_id`, `user_id`, `points`, `timestamp`) VALUES ('{3.id}', '{0.id}', '{1}', '{2}');".format(user,points,await self.getUTCNow(),server)
+				result = [{"points": 0}]
+			else:
+				final_points = result[0]["points"] + points
+				sql = "UPDATE `points` SET `points`={0}, `timestamp`={2} WHERE `user_id`={1.id} AND `server_id`={3.id}".format(final_points,user,await self.getUTCNow(),server)
+			result2 = self.cursor.execute(sql)
+			self.cursor.commit()
+			beforeLevel = await self.tier_from_points(result[0]["points"])
+			afterLevel = await self.tier_from_points(final_points)
+			print("{0}>{1}".format(afterLevel,beforeLevel))
+			if afterLevel > beforeLevel:
+				print("LEVEL UP!")
+				if message:
+					await message.channel.send((await self.getGlobalMessage(await self.getPersonality(message.guild),"level_up")).format(user,afterLevel))
+			print("done")
+			return {"before": result[0]["points"],"after": final_points}
+		except Exception as e:
+			print(e)
+			self.cursor.rollback()
+			return False
+
+	async def get_points(self,user,guild):
+		try:
+			sql = "SELECT `points`, `timestamp` FROM `points` WHERE user_id={0.id} AND server_id={1.id}".format(user,guild)
+			result = self.cursor.execute(sql).fetchall()
+			if not result:
+				return {"points": 0, "timestamp": await self.getUTCNow(), "no_row": True}
+			return result[0]
+		except Exception as e:
+			self.cursor.rollback()
+			return False
+
+	async def set_points(self,user,points:int):
+		try:
+			sql = "SELECT points FROM `points` WHERE user_id={0.id}".format(user)
+			result = self.cursor.execute(sql).fetchall()
+			final_points = points
+			if not result:
+				sql = "INSERT INTO `points` (`user_id`, `points`, `timestamp`) VALUES ('{0.id}', '{1}', '{2}');".format(user,points,self.getUTCNow())
+			else:
+				sql = "UPDATE `points` SET points={0} WHERE user_id={1.id}".format(final_points,user)
+			result = self.cursor.execute(sql)
+			self.cursor.commit()
+			return {"before": result[0]["points"],"after": points}
+		except Exception as e:
+			self.cursor.rollback()
 			return False
 
 	def find_member(self, server, name, steps=2):

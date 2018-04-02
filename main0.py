@@ -30,8 +30,6 @@ if dev_mode:
 	shard_count = int(args.dev[1])
 	shard_id = int(args.dev[0])
 
-print("SHARD ID: " + str(shard_id) + ", SHARD COUNT: " + str(shard_count))
-
 bot = Claribot(loop=loop,shard_id=shard_id,shard_count=shard_count,dev_mode=dev_mode,max_messages=10000,db_pswd=db_pswd,token=token)
 
 if __name__ == "__main__":

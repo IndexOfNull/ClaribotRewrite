@@ -42,6 +42,9 @@ Fun:
   13. Gru Mistake           : $gru <user>
   14. Guy Fieri             : $fieri <image>
   15. Free Smilies :)       : $freesmiley
+  16. Compliment Someone :) : $wholesome <user>
+  17. THIS IS SICKENING     : $maxmoefoe <image>
+  18. ITS TIME TO STOP      : $frank <image>
 
 Misc:
   1. Random Number          : $random <min> <max>
@@ -83,3 +86,4 @@ Owner Commands (all require bot owner privileges):
 TODO:
   1. Make a blacklist "list" command so users can see blacklisted channels √ (done, actually it turned out to be really easy)
   2. Make a level system
+  3. Add $wholesome <user>* √
