@@ -364,6 +364,41 @@ class Utility():
 		except Exception as e:
 			ctx.send("`{0}`".format(e))
 
+	@commands.command()
+	@commands.cooldown(1,3,commands.BucketType.user)
+	async def leaderboard(self,ctx):
+		try:
+			print("good1")
+			sql = "SELECT * FROM ( SELECT * FROM `points` WHERE server_id={0.id} ORDER BY `points` DESC LIMIT 5 ) sub ORDER BY `points` DESC".format(ctx.message.guild)
+			result = self.cursor.execute(sql).fetchall()
+			if not result:
+				await ctx.send(await self.getCommandMessage(ctx.personality,ctx,"no_board"))
+				return
+			if result:
+				final = await self.getCommandMessage(ctx.personality,ctx,"header")
+				first = result[0]
+				nonfirst = result[1:]
+				user = self.bot.get_user(first["user_id"])
+				if not user:
+					final += (await self.getCommandMessage(ctx.personality,ctx,"entry_error"))
+				elif user:
+					final += (await self.getCommandMessage(ctx.personality,ctx,"top_user")).format(user,first["points"])
+				for ind,entry in enumerate(nonfirst):
+					print("iter")
+					user2 = self.bot.get_user(entry["user_id"])
+					print(user2)
+					if not user2:
+						print("no user")
+						final += (await self.getCommandMessage(ctx.personality,ctx,"entry_error"))
+					elif user2:
+						print("user")
+						final += (await self.getCommandMessage(ctx.personality,ctx,"entry")).format(ind+2,user2,entry["points"])
+				await ctx.send(final)
+		except Exception as e:
+			await ctx.send("`{0}`".format(e))
+			self.cursor.rollback()
+			return False
+
 	@commands.command(pass_context=True,hidden=True)
 	@checks.is_bot_owner()
 	@commands.cooldown(1,5)
@@ -388,6 +423,7 @@ class Utility():
 			result = await result
 		#"```markdown\nUSE THIS WITH EXTREME CAUTION\n\nEval() Results\n=========\n\n> " + python.format(result)) + "\n```"
 		await ctx.message.channel.send(python.format(result))
+
 
 	@commands.command(pass_context=True,hidden=True)
 	@checks.is_bot_owner()

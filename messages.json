@@ -81,6 +81,13 @@
       },
       "blacklist-list-channels": {
         "error": ":warning: There are no channels blacklisted or something went wrong."
+      },
+      "leaderboard": {
+        "header": "Showing top 5 users with the most spicy points\n\n",
+        "entry_error": ":warning: There was a problem showing this entry.",
+        "no_board": ":mag: I couldn't find any leaderboards for this server...",
+        "top_user": ":trophy: **{0.name}#{0.discriminator}** ({1} points)\n",
+        "entry": "{0}: *{1.name}#{1.discriminator}* ({2} points)\n"
       }
     }
   },

@@ -89,5 +89,5 @@ Owner Commands (all require bot owner privileges):
 
 TODO:
   1. Make a blacklist "list" command so users can see blacklisted channels √ (done, actually it turned out to be really easy)
-  2. Make a level system
+  2. Make a level system √
   3. Add $wholesome <user>* √

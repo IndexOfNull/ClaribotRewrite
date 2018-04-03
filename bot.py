@@ -132,7 +132,8 @@ class Claribot(commands.Bot):
 		dice = randint(1,3)
 		user = message.author
 		if dice == 1:
-			#print("handling points")
+
+			print("handling points")
 			current_time = await self.funcs.getUTCNow()
 			points_row = await self.funcs.get_points(user,message.guild)
 			#print(str(points_row["points"]) + ", " + str(points_row["timestamp"]))
@@ -146,18 +147,29 @@ class Claribot(commands.Bot):
 				if "no_row" in points_row:
 					is_none = True
 			if good:
+				extra_points = True
 				msg_count = 0
 				def predicate(msg):
+					return msg.author.id != message.author.id and not msg.author.bot
+				history = await message.channel.history(limit=10,before=message).filter(predicate).flatten()
+				print(history)
+				if not history:
+					history = [message]
+					extra_points = False
+				def extrapredicate(msg):
 					return msg.author.id == message.author.id and message.author.bot is False
-				if not is_none:
-					last_time = await self.funcs.secondsToUTC(points_row["timestamp"])
-					time_dif = current_time - points_row["timestamp"]
-					if not time_dif > 3600:
-						return
-					async for elem in message.channel.history(limit=50,around=last_time).filter(predicate):
+				print("exra_points: " + str(extra_points))
+				if extra_points:
+					if not is_none:
+						last_time = await self.funcs.secondsToUTC(points_row["timestamp"])
+						time_dif = current_time - points_row["timestamp"]
+						if not time_dif > 3600:
+							return
+						async for elem in message.channel.history(limit=10,around=last_time).filter(extrapredicate):
+							msg_count += 1
+					print(history[0].content)
+					async for elem in message.channel.history(limit=25,before=history[0]).filter(extrapredicate):
 						msg_count += 1
-				async for elem in message.channel.history(limit=25,before=message).filter(predicate):
-					msg_count += 1
 				#print("giving points")
 				await self.funcs.give_points(user,20+int(0.4*msg_count),message.guild,message)
 				return
