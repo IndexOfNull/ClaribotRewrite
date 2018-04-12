@@ -175,7 +175,7 @@ class Claribot(commands.Bot):
 							return
 						async for elem in message.channel.history(limit=10,around=last_time).filter(extrapredicate):
 							msg_count += 1
-					print(history[0].content)
+					#print(history[0].content)
 					async for elem in message.channel.history(limit=25,before=history[0]).filter(extrapredicate):
 						msg_count += 1
 				#print("giving points")
@@ -269,7 +269,7 @@ class Claribot(commands.Bot):
 
 	async def on_command_completion(self,ctx):
 		done_time = ctx.message.created_at.microsecond / 1000 - datetime.time().microsecond / 1000
-		print("command done in {0} ms".format(done_time))
+		#print("command done in {0} ms".format(done_time))
 
 	@property
 	def get_cursor(self):

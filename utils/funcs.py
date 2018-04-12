@@ -477,7 +477,7 @@ class Funcs():
 		check_been_false = False
 		if len(urls) == 0:
 			last_image = await self.get_attachment_images(ctx,self.imagecheck,gif)
-			print(last_image)
+			#print(last_image)
 			if len(last_image) == 0:
 				if msg:
 					error = (await self.getGlobalMessage(personality,"missing_image_attachments")).format(', mention(s)' if not gif else ' ')
@@ -494,7 +494,7 @@ class Funcs():
 			check = await self.imagecheck(url,gif)
 			if check is False:
 				check_been_false = True
-				print("BAD CHECK")
+				#print("BAD CHECK")
 				if gif is True:
 					if msg:
 						await channel.send((await self.getGlobalMessage(personality,"gif_command")))
@@ -506,7 +506,7 @@ class Funcs():
 					ctx.command.reset_cooldown(ctx)
 					continue
 			if check is None:
-				print("Check is none")
+				#print("Check is none")
 				continue
 			img_urls.append(url)
 		if len(img_urls) == 0 and not check_been_false:
