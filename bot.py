@@ -13,6 +13,9 @@ from utils.funcs import Funcs
 from utils import checks
 import time
 from random import *
+from chatterbot import ChatBot
+from chatterbot.trainers import ListTrainer
+from chatterbot.trainers import ChatterBotCorpusTrainer
 
 modules = [
 "mods.util",
@@ -56,7 +59,7 @@ def init_funcs(bot):
 		db_name = "Claribot"
 	global cursor, engine, Session
 	engine = create_engine("mysql+pymysql://{0}:{1}@localhost/{2}?charset=utf8mb4".format("claribot"+str(bot.shard_id),bot.db_pswd,db_name),isolation_level="READ COMMITTED")
-	session_factory = sessionmaker(bind=engine)
+	Session = sessionmaker(bind=engine)
 	Session = scoped_session(sessionmaker(bind=engine))
 	bot.mysql = Object()
 	engine = bot.mysql.engine = engine
@@ -74,6 +77,14 @@ def init_funcs(bot):
 	personality_info = get_personality_info()
 	bot.defaultmessages = personality_info[0]
 	bot.messages = personality_info[1]
+	bot.chatbot = ChatBot(
+	    'Claribot',
+	    storage_adapter='chatterbot.storage.SQLStorageAdapter',
+	    database='./chatbot.sqlite3'
+	)
+	bot.chatbot.set_trainer(ChatterBotCorpusTrainer)
+	#bot.chatbot.train("./resource/relationstraining.yml")
+	#bot.chatbot.train("chatterbot.corpus.english")
 
 
 class Claribot(commands.Bot):
@@ -129,11 +140,10 @@ class Claribot(commands.Bot):
 		print("Done in {0}ms".format(done_time-current_time))
 
 	async def handle_points(self,message):
-		dice = randint(1,3)
+		dice = randint(1,4)
 		user = message.author
 		if dice == 1:
 
-			print("handling points")
 			current_time = await self.funcs.getUTCNow()
 			points_row = await self.funcs.get_points(user,message.guild)
 			#print(str(points_row["points"]) + ", " + str(points_row["timestamp"]))
@@ -151,14 +161,12 @@ class Claribot(commands.Bot):
 				msg_count = 0
 				def predicate(msg):
 					return msg.author.id != message.author.id and not msg.author.bot
-				history = await message.channel.history(limit=10,before=message).filter(predicate).flatten()
-				print(history)
+				history = await message.channel.history(limit=5,before=message).filter(predicate).flatten()
 				if not history:
 					history = [message]
 					extra_points = False
 				def extrapredicate(msg):
 					return msg.author.id == message.author.id and message.author.bot is False
-				print("exra_points: " + str(extra_points))
 				if extra_points:
 					if not is_none:
 						last_time = await self.funcs.secondsToUTC(points_row["timestamp"])
@@ -173,7 +181,6 @@ class Claribot(commands.Bot):
 				#print("giving points")
 				await self.funcs.give_points(user,20+int(0.4*msg_count),message.guild,message)
 				return
-			print("Did not meet all requirements")
 
 
 

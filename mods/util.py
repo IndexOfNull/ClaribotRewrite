@@ -5,6 +5,9 @@ from utils import checks
 from random import *
 import hashlib
 from sqlalchemy.sql import text
+from io import BytesIO, StringIO
+import json
+import sys, os
 
 class Utility():
 
@@ -14,6 +17,7 @@ class Utility():
 		self.getPersonality = self.bot.funcs.getPersonality
 		self.getCommandMessage = self.bot.funcs.getCommandMessage
 		self.getGlobalMessage = self.bot.funcs.getGlobalMessage
+		self.chatbot = self.bot.chatbot
 
 	@commands.command()
 	@commands.cooldown(1,2,commands.BucketType.user)
@@ -24,8 +28,8 @@ class Utility():
 	@commands.cooldown(1,3,commands.BucketType.guild)
 	@commands.guild_only()
 	async def blacklist(self,ctx):
-	    if ctx.invoked_subcommand is None:
-	        await ctx.send('Valid subcommands are `channel, user, list`')
+		if ctx.invoked_subcommand is None:
+			await ctx.send('Valid subcommands are `channel, user, list`')
 
 
 
@@ -368,7 +372,6 @@ class Utility():
 	@commands.cooldown(1,3,commands.BucketType.user)
 	async def leaderboard(self,ctx):
 		try:
-			print("good1")
 			sql = "SELECT * FROM ( SELECT * FROM `points` WHERE server_id={0.id} ORDER BY `points` DESC LIMIT 5 ) sub ORDER BY `points` DESC".format(ctx.message.guild)
 			result = self.cursor.execute(sql).fetchall()
 			if not result:
@@ -384,20 +387,33 @@ class Utility():
 				elif user:
 					final += (await self.getCommandMessage(ctx.personality,ctx,"top_user")).format(user,first["points"])
 				for ind,entry in enumerate(nonfirst):
-					print("iter")
 					user2 = self.bot.get_user(entry["user_id"])
-					print(user2)
 					if not user2:
-						print("no user")
 						final += (await self.getCommandMessage(ctx.personality,ctx,"entry_error"))
 					elif user2:
-						print("user")
 						final += (await self.getCommandMessage(ctx.personality,ctx,"entry")).format(ind+2,user2,entry["points"])
 				await ctx.send(final)
 		except Exception as e:
 			await ctx.send("`{0}`".format(e))
 			self.cursor.rollback()
 			return False
+
+	@commands.command(hidden=True)
+	@checks.is_bot_owner()
+	@commands.cooldown(1,5)
+	async def dump_chatbot_data(self,ctx):
+		try:
+			export = {'conversations': self.chatbot.trainer._generate_export_data()}
+			final = StringIO()
+			dumped = json.dump(export,final,ensure_ascii=False)
+			if sys.getsizeof(final) > 8388608:
+				self.chatbot.trainer.export_for_training("./ChatbotTraining.json")
+				await ctx.message.author.send("The training file was too big to upload, it has been saved onto the server's drive.")
+				return
+			final.seek(0)
+			await ctx.message.author.send(file=discord.File(final,"ChatbotTraining.json"))
+		except Exception as e:
+			await ctx.send("`{0}`".format(e))
 
 	@commands.command(pass_context=True,hidden=True)
 	@checks.is_bot_owner()

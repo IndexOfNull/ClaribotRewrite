@@ -11,11 +11,13 @@ import sys, os
 from random import *
 import urllib
 
+
 class Fun():
 	def __init__(self,bot):
 		self.bot = bot
 		self.cursor = self.bot.mysql.cursor
 		self.get_images = self.bot.get_images
+		self.chatbot = self.bot.chatbot
 
 	#Image Based Commands
 
@@ -69,6 +71,14 @@ class Fun():
 			await wait.edit(content="`{0}`".format(e))
 			print(e)
 			#ignored, notification of error will be handled by bot.py
+
+	@commands.command()
+	@commands.cooldown(1,3,commands.BucketType.guild)
+	async def chat(self,ctx,*,message:str):
+		try:
+			await ctx.send(self.chatbot.get_response(message))
+		except Exception as e:
+			await ctx.send("`{0}`".format(e))
 
 	@commands.command(aliases=["itstimetostop"])
 	@commands.cooldown(1,3,commands.BucketType.guild)
