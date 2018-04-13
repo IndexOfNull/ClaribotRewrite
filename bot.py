@@ -5,6 +5,7 @@ import discord
 import re
 import logging
 import json
+import sqlalchemy
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
 from discord.ext import commands
@@ -49,21 +50,32 @@ def init_logging(shard_id, bot):
 	bot.logger = logger
 	bot.log = log
 
+class Chatbot():
+	def __init__(self):
+		self.chatbot = ChatBot("Claribot",database="./chatbot.sqlite3")
+		self.chatbot.set_trainer(ChatterBotCorpusTrainer)
+
 class Object(object):
 	pass
 
 def init_funcs(bot):
+	bot.engines = []
+	bot.sessions = []
+
 	if bot.dev_mode is True:
 		db_name = "Claribot_dev"
 	else:
 		db_name = "Claribot"
-	global cursor, engine, Session
+	global cursor, engine, DBSession
+	#global DBSession
 	engine = create_engine("mysql+pymysql://{0}:{1}@localhost/{2}?charset=utf8mb4".format("claribot"+str(bot.shard_id),bot.db_pswd,db_name),isolation_level="READ COMMITTED")
-	Session = sessionmaker(bind=engine)
-	Session = scoped_session(sessionmaker(bind=engine))
+	#Session = sessionmaker(bind=engine)
+	DBSession = sessionmaker(bind=engine)
 	bot.mysql = Object()
 	engine = bot.mysql.engine = engine
 	cursor = bot.mysql.cursor = bot.get_cursor
+	bot.engines.append(engine)
+	bot.sessions.append(cursor)
 	bot.remove_command("help")
 	funcs = Funcs(bot,cursor)
 	bot.funcs = funcs
@@ -77,17 +89,15 @@ def init_funcs(bot):
 	personality_info = get_personality_info()
 	bot.defaultmessages = personality_info[0]
 	bot.messages = personality_info[1]
-	bot.chatbot = ChatBot(
-	    'Claribot',
-	    storage_adapter='chatterbot.storage.SQLStorageAdapter',
-	    database='./chatbot.sqlite3'
-	)
-	bot.chatbot.set_trainer(ChatterBotCorpusTrainer)
+
 	#bot.chatbot.train("./resource/relationstraining.yml")
 	#bot.chatbot.train("chatterbot.corpus.english")
 
 
+
 class Claribot(commands.Bot):
+
+
 	def __init__(self, *args, **kwargs):
 		if sys.platform == "win32":
 			self.loop = kwargs.pop('loop', asyncio.ProactorEventLoop())
@@ -108,7 +118,15 @@ class Claribot(commands.Bot):
 		self.confirmation_commands = ["delwarning","deletewarning"]
 
 	async def on_ready(self):
+
 		init_funcs(self)
+		self.chatbot = ChatBot(
+		    'Claribot',
+		    storage_adapter='utils.sql_storage.SQLStorageAdapter',
+		    database="chatbot.sqlite3"
+		)
+		self.chatbot.set_trainer(ChatterBotCorpusTrainer)
+		#self.chatbot.train("./resource/relationstraining.yml")
 		for cog in modules:
 			try:
 				self.load_extension(cog)
@@ -122,6 +140,7 @@ class Claribot(commands.Bot):
 		print('------\n{0}\nShard {1}/{2}{3}{4}------'.format(self.user, self.shard_id, self.shard_count-1, '\nDev Mode: Enabled\n' if self.dev_mode else '\n',"Playing: "+playing+"\n"))
 		game = discord.Game(name=playing)
 		await self.change_presence(activity=game)
+
 
 	async def command_help(self,ctx):
 		if ctx.invoked_subcommand:
@@ -273,7 +292,7 @@ class Claribot(commands.Bot):
 
 	@property
 	def get_cursor(self):
-		return Session()
+		return DBSession()
 
 	def run(self):
 		super().run(self.token)
