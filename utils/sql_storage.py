@@ -277,18 +277,27 @@ class SQLStorageAdapter(StorageAdapter):
 
             self._session_finish(session)
 
-    def create_conversation(self):
+    def create_conversation(self,**kwargs):
         """
         Create a new conversation.
         """
+        from chatterbot.ext.sqlalchemy_app.models import Base
+        id = kwargs.pop("id",None)
         Conversation = self.get_model('conversation')
 
         session = self.Session()
         conversation = Conversation()
+        try:
+            thing = session.query(Base.metadata.tables["conversation"]).filter_by(id=id).one()
+            if thing:
+                return id
+        except:
+            pass
 
+        if id:
+            conversation.id = int(id)
         session.add(conversation)
         session.flush()
-
         session.refresh(conversation)
         conversation_id = conversation.id
 

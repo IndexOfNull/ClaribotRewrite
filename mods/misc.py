@@ -226,5 +226,6 @@ class Misc():
 			print(e)
 
 
+
 def setup(bot):
 	bot.add_cog(Misc(bot))

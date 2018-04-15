@@ -10,7 +10,8 @@ import textwrap
 import sys, os
 from random import *
 import urllib
-
+import traceback
+import re
 
 class Fun():
 	def __init__(self,bot):
@@ -18,6 +19,7 @@ class Fun():
 		self.cursor = self.bot.mysql.cursor
 		self.get_images = self.bot.get_images
 		self.chatbot = self.bot.chatbot
+		self.funcs = self.bot.funcs
 
 	#Image Based Commands
 
@@ -72,13 +74,7 @@ class Fun():
 			print(e)
 			#ignored, notification of error will be handled by bot.py
 
-	@commands.command()
-	@commands.cooldown(1,3,commands.BucketType.guild)
-	async def chat(self,ctx,*,message:str):
-		try:
-			await ctx.send(self.chatbot.get_response(message))
-		except Exception as e:
-			await ctx.send("`{0}`".format(e))
+
 
 	@commands.command(aliases=["itstimetostop"])
 	@commands.cooldown(1,3,commands.BucketType.guild)
@@ -612,6 +608,22 @@ class Fun():
 		except Exception as e:
 			await ctx.send(content="`{0}`".format(e))
 			print(e)
+
+	@commands.command()
+	@commands.cooldown(1,8,commands.BucketType.guild)
+	async def chat(self,ctx,*,message:str):
+		try:
+			urls = re.findall('((^|, )(http|https|wss|ftp|mailto|bitcoin|file|data|irc))+://(?:[a-zA-Z]|[0-9]|[$-_@.&+]    |[!*\(\), ]|(?:%[0-9a-fA-F][0-9a-fA-F]))+', message)#re.findall('https?://(?:[-\w.]|(?:%[\da-fA-F]{2}))+', message)
+			mentions = ctx.message.mentions
+			if urls or mentions:
+				await ctx.send(await self.funcs.getCommandMessage(ctx.personality,ctx,"abuse_prevention"))
+				return
+			await ctx.trigger_typing()
+			conv_id = self.chatbot.storage.create_conversation(id=ctx.message.channel.id)
+			await ctx.send(self.chatbot.get_response(message,conv_id))
+		except Exception as e:
+			await ctx.send("`{0}`".format(e))
+			traceback.print_exc()
 
 def setup(bot):
 	bot.add_cog(Fun(bot))

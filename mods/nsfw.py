@@ -8,11 +8,14 @@ import asyncio
 import aiohttp
 #from aiosocksy.connector import ProxyConnector, ProxyClientRequest
 import json
+from urllib.parse import urlparse
+import traceback
 
 class NSFW():
 
 	def __init__(self,bot):
 		self.bot = bot
+		self.funcs = self.bot.funcs
 		self.cursor = self.bot.mysql.cursor
 		self.sure = "bmF1Z2h0eWJvaQ=="
 
@@ -106,6 +109,46 @@ class NSFW():
 		except Exception as e:
 			await wait.edit(content="`{0}`".format(e))
 			print(e)
+
+	@commands.command()
+	@checks.nsfw()
+	@commands.cooldown(1,3,commands.BucketType.guild)
+	async def yiff(self,ctx,query:str=None):
+		wait = await ctx.send((await self.bot.getGlobalMessage(ctx.personality,"command_wait")))
+		try:
+			before=None
+			if randint(0,1) == 1:
+				before=str(randint(1,30)) + "d"
+			response = (await self.bot.funcs.getReddit("yiff",nsfw=True,video=False,before=before))
+			if response:
+				response = response["data"]
+			for i in range(10):
+				ind = randint(0,len(response)-1)
+				post = response[ind]
+				url = None
+				if "url" in post:
+					domain = urlparse(post["url"]).netloc
+					if domain == "imgur.com":
+							purl = await self.funcs.imgurToImageUrl(post["url"])
+							if purl:
+								url = {"url":purl,"source":post["full_link"]}
+								break
+				if "preview" in post:
+					url = {"url":post["preview"]["images"][0]["source"]["url"],"source":post["full_link"]}
+					break
+
+			if url is None:
+				await wait.edit(content=(await self.bot.funcs.getGlobalMessage(ctx.personality,"nsfw_no_search_result")))
+				return
+			embed = discord.Embed(title=":camera: **Source**",type="rich",color=discord.Color.purple(),url=url["source"])
+			embed.set_image(url=url["url"])
+			print(url["url"])
+			await wait.delete()
+			await ctx.send(embed=embed)
+
+		except Exception as e:
+			await ctx.send("`{0}`".format(e))
+			traceback.print_exc()
 
 	@commands.command(aliases=["fur"])
 	@checks.nsfw()

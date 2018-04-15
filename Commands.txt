@@ -45,6 +45,7 @@ Fun:
   16. Compliment Someone :) : $wholesome <user>
   17. THIS IS SICKENING     : $maxmoefoe <image>
   18. ITS TIME TO STOP      : $frank <image>
+  19. Chat with the bot     : $chat <message> (HIGHLY EXPERIMENTAL)
 
 Misc:
   1. Random Number          : $random <min> <max>
@@ -86,8 +87,4 @@ Blacklist:
 Owner Commands (all require bot owner privileges):
   1. Eval                   : $eval <code>*
   2. Playing Status         : $status <text>*
-
-TODO:
-  1. Make a blacklist "list" command so users can see blacklisted channels √ (done, actually it turned out to be really easy)
-  2. Make a level system √
-  3. Add $wholesome <user>* √
+  3. Dump Chatbot Data      : $dump_chatbot_data

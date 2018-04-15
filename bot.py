@@ -50,10 +50,6 @@ def init_logging(shard_id, bot):
 	bot.logger = logger
 	bot.log = log
 
-class Chatbot():
-	def __init__(self):
-		self.chatbot = ChatBot("Claribot",database="./chatbot.sqlite3")
-		self.chatbot.set_trainer(ChatterBotCorpusTrainer)
 
 class Object(object):
 	pass
@@ -112,6 +108,7 @@ class Claribot(commands.Bot):
 		init_logging(shard_id,self)
 		self.dev_mode = kwargs.pop("dev_mode",False)
 		self.owner = None
+		#self.case_insensitive = True
 		db_pswd = kwargs.pop('db_pswd')
 		self.db_pswd = db_pswd
 		self.cmd_start = None
@@ -121,9 +118,15 @@ class Claribot(commands.Bot):
 
 		init_funcs(self)
 		self.chatbot = ChatBot(
-		    'Claribot',
-		    storage_adapter='utils.sql_storage.SQLStorageAdapter',
-		    database="chatbot.sqlite3"
+			'Claribot',
+			#storage_adapter="chatterbot.storage.sql_storage.SQLStorageAdapter",
+			storage_adapter='utils.sql_storage.SQLStorageAdapter',
+			database="chatbot.sqlite3",
+			logic_adapters=[{
+				"import_path": "chatterbot.logic.BestMatch",
+				"statement_comparison_function": "chatterbot.comparisons.levenshtein_distance",
+				"response_selection_method": "chatterbot.response_selection.get_first_response"
+			}]
 		)
 		self.chatbot.set_trainer(ChatterBotCorpusTrainer)
 		#self.chatbot.train("./resource/relationstraining.yml")
@@ -250,6 +253,7 @@ class Claribot(commands.Bot):
 			loop.close()""" #Torture test stuff
 			self.cmd_start = current_milli_time()
 			await self.process_commands(message,prefix)
+
 
 	async def on_command_error(self, ctx, e):
 		personality = await self.funcs.getPersonality(ctx.message)

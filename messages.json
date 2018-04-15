@@ -88,6 +88,9 @@
         "no_board": ":mag: I couldn't find any leaderboards for this server...",
         "top_user": ":trophy: **{0.name}#{0.discriminator}** ({1} points)\n",
         "entry": "{0}: *{1.name}#{1.discriminator}* ({2} points)\n"
+      },
+      "chat": {
+        "abuse_prevention": ":no_entry: To prevent abuse, no urls or mentions may be submitted to the chatbot. Please try again."
       }
     }
   },
