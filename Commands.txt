@@ -46,6 +46,11 @@ Fun:
   17. THIS IS SICKENING     : $maxmoefoe <image>
   18. ITS TIME TO STOP      : $frank <image>
   19. Chat with the bot     : $chat <message> (HIGHLY EXPERIMENTAL)
+  20. Deep Fry              : $df <image>
+  21. Magik                 : $magik <image>
+  22. Invert Colors         : $invert <image>
+  23. Jpegify An Image      : $magik2 <image>
+  24. Who Did This          : $wdt <image>
 
 Misc:
   1. Random Number          : $random <min> <max>

@@ -1,10 +1,7 @@
 from discord.ext import commands
 import discord
-from PIL import Image
-from PIL import ImageFont
-from PIL import ImageOps
-from PIL import ImageDraw
-from PIL import ImageFilter
+from PIL import Image, ImageFont, ImageOps, ImageDraw, ImageFilter, ImageEnhance
+from wand.image import Image as WandImage
 from io import BytesIO, StringIO
 import textwrap
 import sys, os
@@ -12,6 +9,14 @@ from random import *
 import urllib
 import traceback
 import re
+import wand
+
+class Colours:
+	RED = (254, 0, 2)
+	YELLOW = (255, 255, 15)
+	BLUE = (36, 113, 229)
+	WHITE = (255,) * 3
+	GREEN = (17,214,0)
 
 class Fun():
 	def __init__(self,bot):
@@ -21,7 +26,173 @@ class Fun():
 		self.chatbot = self.bot.chatbot
 		self.funcs = self.bot.funcs
 
+	async def deepfry_image(self, img: Image, *, type="RED") -> Image:
+		try:
+			img = img.copy().convert('RGB')
+
+			# Crush image to hell and back
+			img = img.convert('RGB')
+			width, height = img.width, img.height
+			img = img.resize((int(width ** .75), int(height ** .75)), resample=Image.LANCZOS)
+			img = img.resize((int(width ** .88), int(height ** .88)), resample=Image.BILINEAR)
+			img = img.resize((int(width ** .9), int(height ** .9)), resample=Image.BICUBIC)
+			img = img.resize((width, height), resample=Image.BICUBIC)
+			img = ImageOps.posterize(img, 4)
+
+			# Generate red and yellow overlay for classic deepfry effect
+			r = img.split()[0]
+			r = ImageEnhance.Contrast(r).enhance(2.0)
+			r = ImageEnhance.Brightness(r).enhance(1.5)
+
+			if type == "RED":
+				r = ImageOps.colorize(r, Colours.RED, Colours.YELLOW)
+			elif type == "BLUE":
+				r = ImageOps.colorize(r, Colours.BLUE, Colours.WHITE)
+			elif type == "GREEN":
+				r = ImageOps.colorize(r, Colours.GREEN, Colours.YELLOW)
+
+			# Overlay red and yellow onto main image and sharpen the hell out of it
+			img = Image.blend(img, r, 0.75)
+			img = ImageEnhance.Sharpness(img).enhance(100.0)
+			final = BytesIO()
+			img.save(final,"png")
+			final.seek(0)
+			return final
+		except Exception as e:
+			print(e)
+			return None
+
+	async def do_magik(self,scale,imgs):
+		try:
+			
+			if isinstance(imgs, (list,)):
+				inImgs = imgs
+				imgs = []
+				for img in inImgs:
+					b = await self.bot.funcs.bytes_download(img)
+					if b:
+						imgs.append(b)
+			if isinstance(imgs, str):
+				b = await self.bot.funcs.bytes_download(img)
+				if b:
+					imgs = [b]
+			magiked = []
+			for img in imgs:
+				i = wand.image.Image(file=img)
+				i.format = 'jpg'
+				i.alpha_channel = True
+				if i.size >= (3000,3000):
+					return False
+				i.transform(resize="800x800>")
+				i.liquid_rescale(width=int(i.width * 0.5), height=int(i.height * 0.5), delta_x=int(0.5 * scale) if scale else 1, rigidity=0)
+				i.liquid_rescale(width=int(i.width * 1.5), height=int(i.height * 1.5), delta_x=scale if scale else 2, rigidity=0)
+				imagik = BytesIO()
+				i.save(file=imagik)
+				imagik.seek(0)
+				magiked.append(imagik)
+			if magiked:
+				return magiked
+			return None
+		except Exception as e:
+			print(e)
+			traceback.print_exc()
+			return None
+
+
 	#Image Based Commands
+
+	@commands.command(aliases=["magik2","jpegify","jpeg"])
+	@commands.cooldown(1,3,commands.BucketType.guild)
+	async def morejpeg(self,ctx,*urls):
+		try:
+			await ctx.trigger_typing()
+			images = await self.get_images(ctx,urls=urls,limit=3)
+			if images:
+				for url in images:
+					b = await self.bot.funcs.bytes_download_images(ctx,url,images)
+					if b is None:
+						continue
+					elif b is False:
+						return
+					img = Image.open(b).convert("RGB")
+					final = BytesIO()
+					img.save(final,"JPEG",quality=5)
+					final.seek(0)
+					if sys.getsizeof(img) > 8388608:
+						msg = (await self.bot.getGlobalMessage(ctx.personality,"final_upload_too_big"))
+						await ctx.send(msg)
+						continue
+					await ctx.send(file=discord.File(final,"needsmorejpeg.png"))
+		except discord.errors.Forbidden:
+			msg = (await self.bot.getGlobalMessage(ctx.personality,"no_image_perm"))
+			await ctx.send(content=msg)
+		except Exception as e:
+			await ctx.send(content="`{0}`".format(e))
+			print(e)
+
+	@commands.command(aliases=["df"])
+	@commands.cooldown(1,3,commands.BucketType.guild)
+	async def deepfry(self,ctx,*urls):
+		if not urls:
+			urls = None
+		try:
+			await ctx.trigger_typing()
+			images = await self.get_images(ctx,urls=urls,limit=3)
+			if images:
+				for url in images:
+					b = await self.bot.funcs.bytes_download_images(ctx,url,images)
+					if b is None:
+						continue
+					elif b is False:
+						return
+					types = ["GREEN","BLUE","RED"]
+					index = randint(0,len(types)-1)
+					img = Image.open(b).convert("RGBA")
+					fried = await self.deepfry_image(img,type=types[index])
+					if sys.getsizeof(img) > 8388608:
+						msg = (await self.bot.getGlobalMessage(ctx.personality,"final_upload_too_big"))
+						await ctx.send(msg)
+						continue
+					await ctx.send(file=discord.File(fried,"deepfried.png"))
+		except discord.errors.Forbidden:
+			msg = (await self.bot.getGlobalMessage(ctx.personality,"no_image_perm"))
+			await wait.edit(content=msg)
+		except Exception as e:
+			await wait.edit(content="`{0}`".format(e))
+			print(e)
+
+	@commands.command(aliases=["magic","contentaware"],pass_context=True)
+	@commands.cooldown(1,3,commands.BucketType.guild)
+	async def magik(self,ctx,*urls):
+		if not urls:
+			urls = None
+		wait = await ctx.send((await self.bot.funcs.getGlobalMessage(ctx.personality,"command_wait")))
+		try:
+			images = await self.get_images(ctx, urls=urls, limit=3)
+			if images:
+
+				magikedImages = await self.do_magik(2,images)
+				if magikedImages is None:
+					msg = (await self.bot.getGlobalMessage(ctx.personality,"image_process_error"))
+					await wait.edit(content=msg)
+					return
+				if magikedImages is False:
+					msg = (await self.bot.getGlobalMessage(ctx.personality,"image_resolution_limit")).format(3000,3000)
+					await wait.edit(content=msg)
+					return
+				for img in magikedImages:
+					if sys.getsizeof(img) > 8388608:
+						msg = (await self.bot.getGlobalMessage(ctx.personality,"final_upload_too_big"))
+						await ctx.send(msg)
+						continue
+					await ctx.send(file=discord.File(img,"magik.jpg"))
+				await wait.delete()
+		except discord.errors.Forbidden:
+			msg = (await self.bot.getGlobalMessage(ctx.personality,"no_image_perm"))
+			await wait.edit(content=msg)
+		except Exception as e:
+			await wait.edit(content="`{0}`".format(e))
+			traceback.print_exc()
 
 	@commands.command(hidden=True)
 	@commands.cooldown(1,3,commands.BucketType.guild)
@@ -108,6 +279,44 @@ class Fun():
 						await ctx.send(msg)
 						continue
 					upload = discord.File(final,"thisissickening.png")
+					await ctx.send(file=upload)
+			await wait.delete()
+		except discord.errors.Forbidden:
+			msg = (await self.bot.getGlobalMessage(ctx.personality,"no_image_perm"))
+			await wait.edit(content=msg)
+		except Exception as e:
+			await wait.edit(content="`{0}`".format(e))
+			print(e)
+			#ignored, notification of error will be handled by bot.py
+
+	@commands.command(aliases=["wdt"])
+	@commands.cooldown(1,3,commands.BucketType.guild)
+	async def whodidthis(self,ctx, *url):
+		if not url:
+			url = None
+		wait = await ctx.send((await self.bot.funcs.getGlobalMessage(ctx.personality,"command_wait")))
+		try:
+			await ctx.trigger_typing()
+			images = await self.get_images(ctx, urls=url, limit=3)
+			if images:
+				for url in images:
+					b = await self.bot.funcs.bytes_download_images(ctx,url,images)
+					if b is None:
+						continue
+					elif b is False:
+						return
+					img = Image.open(b).convert("RGBA")
+					wdt = Image.open("resource/img/whodidthis.jpg").convert("RGBA")
+					imgr = img.resize((815,671))
+					wdt.paste(imgr,(31,129))
+					final = BytesIO()
+					wdt.save(final,"png")
+					final.seek(0)
+					if sys.getsizeof(final) > 8388608:
+						msg = (await self.bot.getGlobalMessage(ctx.personality,"final_upload_too_big"))
+						await ctx.send(msg)
+						continue
+					upload = discord.File(final,"whodidthis.png")
 					await ctx.send(file=upload)
 			await wait.delete()
 		except discord.errors.Forbidden:
@@ -573,6 +782,11 @@ class Fun():
 		except Exception as e:
 			await ctx.send(content="`{0}`".format(e))
 			print(e)
+
+	@commands.command(aliases=["vaporwave"])
+	@commands.cooldown(1,3,commands.BucketType.user)
+	async def aesthetics(self,ctx,text:str):
+		await ctx.send("`{0}`".format(" ".join(text)))
 
 	@commands.command()
 	@commands.cooldown(1,3,commands.BucketType.guild)
