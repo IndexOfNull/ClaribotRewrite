@@ -63,7 +63,6 @@ class Funcs():
 			for ext in stripped_extentions:
 				id = id.replace(ext,"")
 		imgur_url = "https://i.imgur.com/{0}.jpg".format(id)
-		print(imgur_url)
 		try:
 			with async_timeout.timeout(10):
 				async with self.session.get(imgur_url) as resp:
@@ -116,7 +115,7 @@ class Funcs():
 		author = ctx.message.author
 		channel = ctx.message.channel
 		notification = await channel.send(":pencil: I need confirmation before executing this command, please check your DMs.")
-		confmsg = await author.send(":pencil: To confirm your command please send 'yes' (without quotes). You may also send 'no' (again without quotes) to cancel the request.")
+		confmsg = await author.send(":pencil: To confirm your command (`{0}`) please send 'yes' (without quotes). You may also send 'no' (again without quotes) to cancel the request.".format(ctx.message.content))
 		confirmed = False
 		def check(message):
 			nonlocal confirmed
@@ -130,24 +129,24 @@ class Funcs():
 			message2 = await self.bot.wait_for('message', timeout=20.0, check=check)
 		except asyncio.TimeoutError:
 			await notification.delete()
-			await confmsg.delete()
+			#await confmsg.delete()
 			await author.send(':alarm_clock: Confirmation timed out')
 			return False
 		else:
 			if confirmed:
 				await author.send(':white_check_mark: The command has been confirmed.')
 				await notification.delete()
-				await confmsg.delete()
+				#await confmsg.delete()
 				return True
 			elif confirmed is False:
 				await author.send(':x: The command has been canceled.')
 				await notification.delete()
-				await confmsg.delete()
+				#await confmsg.delete()
 				return False
 			elif confirmed is None:
 				await author.send(":fire: Something went wrong")
 				await notification.delete()
-				await confmsg.delete()
+				#await confmsg.delete()
 				return False
 
 
@@ -167,8 +166,8 @@ class Funcs():
 		params = kwargs.pop("params",{})
 		try:
 			with async_timeout.timeout(10):
-				async with self.session.post(url,headers=headers,data=json.dumps(params)) as resp:
-					data = await resp.read()
+				async with self.session.post(url,headers=headers,data=params) as resp:
+					data = (await resp.read()).decode("utf-8")
 					if isjson:
 						data = json.loads(data)
 					return data
@@ -588,15 +587,51 @@ class Funcs():
 			self.cursor.rollback()
 			return "default"
 
-	async def getBlacklisted(self,message):
+	async def setServerOption(self,serverid,option,value):
 		try:
-			blacklisted = False
+			sql = "SELECT `var` FROM `server_options` WHERE server_id={0} AND var='{1}';".format(serverid,option)
+			result = self.cursor.execute(sql).fetchall()
+			if result:
+				sql = "UPDATE `server_options` SET value='{0}' WHERE server_id={1} AND var='{2}';".format(value,serverid,option)
+			else:
+				sql = "INSERT INTO `server_options` (`server_id`, `var`, `value`) VALUES ('{0}', '{1}', '{2}');".format(serverid,option,value)
+			result = self.cursor.execute(sql)
+			self.cursor.commit()
+		except Exception as e:
+			self.cursor.rollback()
+			print(e)
+			return None
 
+	async def getServerOption(self,serverid,option):
+		try:
+			sql = "SELECT `value` FROM `server_options` WHERE server_id={0} AND var='{1}';".format(serverid,option)
+			result = self.cursor.execute(sql).fetchall()
+			if not result:
+				return None
+			else:
+				return result[0][0]
+		except Exception as e:
+			self.cursor.rollback()
+			print(e)
+			return None
+
+	async def getBlacklisted(self,message,command=None):
+		try:
+
+			blacklisted = False
+			if command:
+				command = self.bot.get_command(command)
 			if isinstance(message.channel, discord.TextChannel) is True:
 				bypass = checks.is_admin(message)
 				#print(bypass)
 				if bypass:
 					return False
+				if command:
+					sql = "SELECT command FROM `blacklist_commands` WHERE server_id={0} AND command='{1}';".format(message.guild.id,command.name)
+					result = self.cursor.execute(sql).fetchall()
+					if result:
+						if result[0]["command"] == command.name:
+							return True
 				sql = "SELECT channel_id FROM `blacklist_channels` WHERE channel_id={0}".format(message.channel.id)
 				result = self.cursor.execute(sql).fetchall()
 				if result:

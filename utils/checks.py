@@ -9,8 +9,20 @@ class No_Mod(commands.CommandError): pass
 class No_Sup(commands.CommandError): pass
 class No_ServerandPerm(commands.CommandError): pass
 class Nsfw(commands.CommandError): pass
+class No_Special(commands.CommandError): pass
 
 bot_owner = 166206078164402176
+
+special_users = [179714881526824960,219938711264165909,158057952085934080,158058382799011840,391373731852976139,158057812054769665] #Ev, Cad, Mil, Dan, Grnt, Mt 
+
+def is_special():
+	def predicate(ctx):
+		user = ctx.message.author.id
+		if user in special_users or user == bot_owner:
+			return True
+		else:
+			raise No_Special()
+	return commands.check(predicate)
 
 def is_owner_check(message):
 	if message.author.id == bot_owner:

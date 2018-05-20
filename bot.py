@@ -22,7 +22,9 @@ modules = [
 "mods.util",
 "mods.fun",
 "mods.misc",
-"mods.nsfw"
+"mods.nsfw",
+"mods.face",
+"mods.admin"
 ]
 
 
@@ -154,14 +156,10 @@ class Claribot(commands.Bot):
 		for page in pages:
 			await ctx.message.channel.send(page.replace("\n", "fix\n", 1))
 
-	async def stress_test(self,message,prefix):
-		print("COMMANDING!")
-		current_time = date.datetime().microsecond / 1000
-		await self.process_commands(message,prefix)
-		done_time = date.datetime().microsecond / 1000
-		print("Done in {0}ms".format(done_time-current_time))
-
 	async def handle_points(self,message):
+		enabled = await self.funcs.getServerOption(message.guild.id,"spicypoints_enabled")
+		if enabled == "false":
+			return
 		dice = randint(1,4)
 		user = message.author
 		if dice == 1:
@@ -172,7 +170,6 @@ class Claribot(commands.Bot):
 			good = False
 			is_none = False
 			if points_row is False:
-				print("ERROR")
 				return
 			if points_row:
 				good = True
@@ -221,12 +218,6 @@ class Claribot(commands.Bot):
 		prefix_result = await self.funcs.getPrefix(message) #self.get_prefixes(message), could be used for database config
 		prefix = prefix_result
 
-		blacklisted = await self.getBlacklisted(message)
-
-		#blacklisted = False
-		if blacklisted and not message.content.lower().startswith(prefix+"blacklist"):
-			return
-
 		check = True
 		if message.content.lower().startswith(prefix) and check and message.content.lower() != prefix:
 
@@ -242,6 +233,11 @@ class Claribot(commands.Bot):
 			#confirmed = await self.confirmation_command(message,command)
 			#if not confirmed:
 			#	return
+			blacklisted = await self.getBlacklisted(message,command)
+
+			#blacklisted = False
+			if blacklisted and not message.content.lower().startswith(prefix+"blacklist"):
+				return
 			"""print("processing command: " + command)
 			print(message.guild.id)"""
 			"""print("COMMAND!")
@@ -281,6 +277,8 @@ class Claribot(commands.Bot):
 		elif isinstance(e, checks.Nsfw):
 			msg = (await self.funcs.getGlobalMessage(personality,"no_nsfw"))
 			await ctx.send(msg)
+		elif isinstance(e, checks.No_Special):
+			await ctx.send(await self.funcs.getGlobalMessage(personality,"no_special"))
 		elif isinstance(e, commands.CheckFailure):
 			msg = (await self.funcs.getGlobalMessage(personality,"check_failure"))
 			await ctx.send(msg)
@@ -307,10 +305,3 @@ class Claribot(commands.Bot):
 			self.loop.run_forever()
 		except Exception as e:
 			print(e)
-
-#TO DO
-"""
-	- Setup database support
-	- Setup Commands
-	- Setup utility functions
-"""

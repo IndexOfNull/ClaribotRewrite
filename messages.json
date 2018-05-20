@@ -15,6 +15,7 @@
       "no_admin": ":no_entry: You need admin privileges to use this command.",
       "no_role": ":no_entry: You need a specific role or privelage to use this command.",
       "no_mod": ":no_entry: You need moderator privileges to use this command.",
+      "no_special": ":sparkles: You have to have SpecialBot perms for this command (be my friend).",
       "no_server_owner": ":no_entry: You need to be the server owner to use this command.",
       "no_bot_owner": ":no_entry: You need to be the bot owner to use this command (if you are the bot owner, please check and see that 'bot_owner' is set properly).",
       "file_limit": ":package: You have hit this command's file limit, please use less than {0} files.",
@@ -27,7 +28,8 @@
       "download_fail": ":warning: I was unable to download your image.",
       "api_error": ":warning: An API error occured.",
       "cooldown": ":watch: This command needs some time before being used again.",
-      "level_up": "{0.mention} :hot_pepper: Your spicy level is now {1}"
+      "level_up": "{0.mention} :hot_pepper: Your spicy level is now {1}",
+      "nsfw_disabled": ":no_entry: NSFW commands have been disabled for this server."
     },
     "commands": {
       "prefix": {
@@ -93,6 +95,39 @@
       },
       "chat": {
         "abuse_prevention": ":no_entry: To prevent abuse, no urls or mentions may be submitted to the chatbot. Please try again."
+      },
+      "option": {
+        "invalid_option": ":warning: The option you entered is invalid.",
+        "invalid_value": ":warning: The value you entered is invalid (try 'yes' or 'no'.)",
+        "success": ":white_check_mark: I've updated `{0}` to `{1}`.",
+        "get_value": ":floppy_disk: `{0}` is currently set to `{1}`.",
+        "default_value": ":floppy_disk: `{0}` is currently set to its default value."
+      },
+      "blacklist-command": {
+        "invalid_command": ":warning: That command doesn't exist, nothing was blacklisted.",
+        "add_success": ":white_check_mark: I have successfully added `{0}` to the blacklist.",
+        "remove_success": ":white_check_mark: I have successfully removed `{0}` from the blacklist.",
+        "blacklist_blacklist": ":no_entry: You cannot blacklist the blacklist command (it's exempted from all other blacklists too.)"
+      },
+      "furaffinity": {
+        "error": ":fire: Something went wrong, FurAffinity made have IUAM (CloudFlare) enabled. Try again later."
+      },
+      "idban": {
+        "error": ":fire: Something went wrong, check that all the id's you entered are correct.",
+        "user_error": ":thinking: Some users were banned, but I couldn't ban others, check that you entered their id's correctly.",
+        "success": ":white_check_mark: All selected users have been successfully banned!"
+      },
+      "prune-messages": {
+        "message_limit": ":chart_with_upwards_trend: Please enter a number of messages less than or equal to {0}.",
+        "success_user": ":white_check_mark: I've successfully pruned {0} messages from {1.mention}.",
+        "success": ":white_check_mark: I've successfully pruned {0} messages",
+        "no_messages": ":x: No messages were pruned.",
+        "error": ":fire: Something went wrong, some messages may have still been pruned."
+      },
+      "clean": {
+        "success": ":white_check_mark: I've successfully cleaned {0} responses.",
+        "no_messages": ":x: No messages were cleaned.",
+        "error": ":fire: Something went wrong, some responses may have still been cleaned."
       }
     }
   },

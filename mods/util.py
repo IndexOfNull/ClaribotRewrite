@@ -14,6 +14,7 @@ class Utility():
 	def __init__(self,bot):
 		self.bot = bot
 		self.cursor = bot.mysql.cursor
+		self.funcs = bot.funcs
 		self.getPersonality = self.bot.funcs.getPersonality
 		self.getCommandMessage = self.bot.funcs.getCommandMessage
 		self.getGlobalMessage = self.bot.funcs.getGlobalMessage
@@ -23,6 +24,35 @@ class Utility():
 	@commands.cooldown(1,2,commands.BucketType.user)
 	async def help(self,ctx):
 		await ctx.send(ctx.message.author.mention + " https://github.com/IndexOfNull/ClaribotRewrite/blob/master/Commands.txt")
+
+	@commands.command(aliases=["opt"])
+	@commands.cooldown(1,3,commands.BucketType.guild)
+	@checks.admin_or_perm(manage_server=True)
+	@commands.guild_only()
+	async def option(self,ctx,option:str,value:str=None):
+
+		personality = ctx.personality
+		option = option.lower()
+		options = ["nsfw_enabled","spicypoints_enabled"]
+		if value is None:
+			val = await self.funcs.getServerOption(ctx.guild.id,option)
+			if val is None:
+				await ctx.send((await self.getCommandMessage(personality,ctx,"default_value")).format(option))
+			else:
+				await ctx.send((await self.getCommandMessage(personality,ctx,"get_value")).format(option,val))
+			return False
+		if not option in options:
+			await ctx.send(await self.getCommandMessage(personality, ctx, "invalid_option"))
+			return False
+		if value in ["on","y","true","yes","yee"]:
+			value = "true"
+		elif value in ["off","n","false","no"]:
+			value = "false"
+		else:
+			await ctx.send(await self.getCommandMessage(personality, ctx, "invalid_value"))
+			return False
+		await self.funcs.setServerOption(ctx.guild.id,option,value)
+		await ctx.send((await self.getCommandMessage(personality, ctx, "success")).format(option,value))
 
 	@commands.group()
 	@commands.cooldown(1,3,commands.BucketType.guild)
@@ -45,16 +75,13 @@ class Utility():
 
 			await ctx.channel.trigger_typing()
 			if channel is None:
-				print("no channel")
 				channel = ctx.channel
 			if channel not in ctx.message.guild.channels:
 				return
 			blacklisted = False
 			sql = "SELECT channel_id FROM `blacklist_channels` WHERE channel_id={0}".format(channel.id)
 			result = self.cursor.execute(sql).fetchall()
-			print(result)
 			if result:
-				print(str(result[0]["channel_id"]) + " == " + str(channel.id))
 				if result[0]["channel_id"] == channel.id:
 					blacklisted = True
 			if blacklisted is True:
@@ -88,7 +115,6 @@ class Utility():
 				final = ":scroll: Listing blacklisted channels\n"
 				entry = "\n  - {0.mention}"
 				for channel in result:
-					print(channel[0])
 					final += entry.format(self.bot.get_channel(channel["channel_id"]))
 				await wait.delete()
 				await ctx.send(final)
@@ -98,10 +124,49 @@ class Utility():
 				await ctx.send(msg)
 		except Exception as e:
 			self.cursor.rollback()
-			print(e)
+			(e)
 			await ctx.send("`{0}`".format(e))
 
+	@blacklist.command(pass_context=True)
+	@commands.cooldown(1,3,commands.BucketType.guild)
+	@commands.guild_only()
+	@checks.admin_or_perm(manage_server=True)
+	async def command(self,ctx,command:str):
+		personality = ctx.personality
+		msg = (await self.getGlobalMessage(personality,"command_wait"))
+		wait = await ctx.send(msg)
+		try:
+			await ctx.channel.trigger_typing()
+			cmd = self.bot.get_command(command)
 
+			if cmd is None:
+				await wait.delete()
+				await ctx.send(await self.getCommandMessage(personality,ctx,"invalid_command","blacklist-command"))
+				return False
+			if cmd.name == "blacklist":
+				await wait.delete()
+				await ctx.send(await self.getCommandMessage(personality,ctx,"blacklist_blacklist","blacklist-command"))
+				return False
+			blacklisted = False
+			sql = "SELECT command FROM `blacklist_commands` WHERE server_id={0} AND command='{1}'".format(ctx.message.guild.id,cmd.name)
+			result = self.cursor.execute(sql).fetchall()
+			if result:
+				if result[0]["command"] == cmd.name:
+					blacklisted = True
+			if blacklisted is True:
+				sql = "DELETE FROM `blacklist_commands` WHERE server_id={0} AND command=\"{1}\"".format(ctx.message.guild.id,cmd.name)
+				msg = (await self.getCommandMessage(personality, ctx, "remove_success", "blacklist-command")).format(cmd.name)
+			else:
+				sql = "INSERT INTO `blacklist_commands` (`server_id`, `command`) VALUES ('{0}', '{1}')".format(ctx.channel.guild.id,cmd.name)
+				msg = (await self.getCommandMessage(personality, ctx, "add_success", "blacklist-command")).format(cmd.name)
+			result = self.cursor.execute(sql)
+			self.cursor.commit()
+			await wait.delete()
+			await ctx.send(msg)
+		except Exception as e:
+			await wait.edit(content="`{0}`".format(e))
+			self.cursor.rollback()
+			return False
 
 	@blacklist.command(pass_context=True)
 	@commands.cooldown(1,3,commands.BucketType.guild)
@@ -258,11 +323,8 @@ class Utility():
 			if result:
 				embed = discord.Embed(title="Server Warning",type="rich",color=discord.Color.red())
 				embed.add_field(name="Server",value="{0.name} ({0.id})".format(ctx.guild),inline=True)
-				print("good")
 				embed.add_field(name="Warned By",value=self.bot.get_user(result["warner"]).mention,inline=True)
-				print("good")
 				utc = (await self.bot.funcs.secondsToUTC(result["timestamp"]))
-				print("good")
 				timestamp = (await self.bot.funcs.getFormattedTime(utc))
 				embed.add_field(name="Timestamp",value=timestamp,inline=False)
 				embed.add_field(name="Issue ID",value=result["issue_id"],inline=True)
@@ -440,6 +502,13 @@ class Utility():
 		#"```markdown\nUSE THIS WITH EXTREME CAUTION\n\nEval() Results\n=========\n\n> " + python.format(result)) + "\n```"
 		await ctx.message.channel.send(python.format(result))
 
+	@commands.command(hidden=True)
+	@checks.is_bot_owner()
+	@commands.cooldown(1,3)
+	async def pm(self,ctx,user:int,*,message:str):
+		user = self.bot.get_user(user)
+		await user.send(message)
+		await ctx.send(":white_check_mark: The message has been sent to " + user.name + "#" + user.discriminator)
 
 	@commands.command(pass_context=True,hidden=True)
 	@checks.is_bot_owner()
@@ -486,8 +555,3 @@ class Utility():
 
 def setup(bot):
 	bot.add_cog(Utility(bot))
-
-
-lol = "4"
-def add(sum1,sum2):
-	return sum1 + sum2

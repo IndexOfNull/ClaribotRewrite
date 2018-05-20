@@ -2,29 +2,16 @@
 (^) - Requires server admin privileges to run
 (~) - Requires server moderator privileges to run
 
+(SB) - Denotes a command designated for special people (not admins, just good friends of mine).
+
 * - Required argument
 
 <image> - denotes an image input, this can be in the form of a mention (gets the mentioned users profile pic), url, or upload
 <user> - denotes a user input, this can be a mention, the users tag (Name#3836), or their name (like "name", this may not always yield good results).
 <channel> - denotes a channel input, this can be a channel name or a channel mention
 
-$help to view this page
+Use $help to view this page
 
-Some notes:
-  - Face commands may come back one day, they are a pain in the ass to make and usually don't work too well, so we'll have to see...
-  - I'm hoping to (maybe) add voice chat related commands one day. One day...
-  - $dssonic and $dawae have been removed, they were really never good.
-  - $instantinvite may be added back, likely not unless there's a demand for it.
-  - The old version will not be hosted anymore, so don't ask.
-
-Why is the rewrite better:
-  - We use databases
-  - There's a usable blacklist
-  - You can change the command prefix (so if using $ is an atrocity to you, you can make it a not atrocity)
-  - There's a much better warning system
-  - Image based commands are handled much better
-  - Should be about as fast or faster than the first version
-  - Can utilize sharding, not a big deal though, its not like we're on 2500 servers...
 
 Fun:
   1. Logan Paulify          : $logan <image>
@@ -64,32 +51,50 @@ Misc:
   9. Reverse Text           : $reverse <text>*
   10. Upside Down Text      : $upsidedown <text>*
 
-Admin (tools for admins/mods):
-  1. Warn A User            : $warn <user>* <reason>*
-  2. Get warning history    : $warninghistory <user>*
-  3. Delete Warning         : $delwarning <warning_id>*
-  4. Get Warning            : $getwarning <warning_id>*
+Admin/Moderation (tools for admins/mods):
+  1. (~)Warn A User            : $warn <user>* <reason>*
+  2. (~)Get warning history    : $warninghistory <user>*
+  3. (~)Delete Warning         : $delwarning <warning_id>*
+  4. (~)Get Warning            : $getwarning <warning_id>*
+  5. (^)Ban User By ID         : $idban <ids> (ids are space seperated)
+  6. Clean Bot Responses       : $clean <max_messages>
+  7. (~)Prune Messages            : $prune <max_messages>* <user>
+    7.1 (~)Prune Bot Messages     : $prune bots <max_messages>
+    7.2 (~)Prune Attachments      : $prune attachments <max_messages>
+    7.3 (~)Prune Embeds           : $prune embeds <max_messages>
+    7.4 (~)Prune Images           : $prune images <max_messages>
+    7.5 (~)Prune Gifs             : $prune gifs <max_messages>
+    7.6 (~)Prune Messages By Text : $prune with <max_messages> <text>
+
+
 
 SpicyPoints Commands:
   1. Get a user's points     : $points <user>
   2. Get a user's level      : $level <user>
 
 NSFW (must be used in an NSFW channel):
-  1. DeviantArt             : $da <query>
-  2. Furry                  : $furry <query>
+  1. DeviantArt             : $da <query> (uses DeviantArt's search syntax, so you can search by tags, author, etc.)
+  2. Furry                  : $furry <query> (uses DeviantArt's search syntax, so you can search by tags, author, etc.)
   3. Catgirl                : $catgirl
+  4. (SB)FurAffinity        : $fa <query> (uses FurAffinity's search syntax, so you can search by keywords, etc.)
 
 Server Commands:
   1. (^)Prefix                 : $prefix <prefix>*
   2. (^)Personality            : $personality <personality>*
+  3. Set an option             : $option <option> <setting> (Refer below for a list of options, settings are boolean, so you can type in "true","false","yes","no",etc.)
 
 Blacklist:
   1. Blacklist              : $blacklist <type> <target>
     1.1 (^)Blacklist Channel   : $blacklist channel <channel>
     1.2 (~)Blacklist User      : $blacklist user <user>*
     1.3 (~)List Channels       : $blacklist list
+    1.4 (^)Blacklist Command   : $blacklist command <command> (you can type in command aliases too!)
 
 Owner Commands (all require bot owner privileges):
   1. Eval                   : $eval <code>*
   2. Playing Status         : $status <text>*
   3. Dump Chatbot Data      : $dump_chatbot_data
+
+Server Options: (set with $option)
+  1. Enable/Disable NSFW Commands   : nsfw_enabled
+  2. Enable/Disable SpicyPoints     : spicypoints_enabled

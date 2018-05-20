@@ -64,7 +64,7 @@ class Fun():
 
 	async def do_magik(self,scale,imgs):
 		try:
-			
+
 			if isinstance(imgs, (list,)):
 				inImgs = imgs
 				imgs = []
@@ -203,6 +203,15 @@ class Fun():
 		except Exception as e:
 			print("oh no, evan died")
 
+	@commands.command(hidden=True)
+	@commands.cooldown(1,3,commands.BucketType.guild)
+	async def urmomsnotalawyer(self,ctx):
+		try:
+			await ctx.send(file=discord.File("resource/img/urmomsnotalawyer.png"))
+			await ctx.send("ur moms not a lawyer.")
+		except Exception as e:
+			print("oh no, evan died")
+
 	@commands.command(aliases=["thisissickening"])
 	@commands.cooldown(1,3,commands.BucketType.guild)
 	async def maxmoefoe(self,ctx, *url):
@@ -288,6 +297,45 @@ class Fun():
 			await wait.edit(content="`{0}`".format(e))
 			print(e)
 			#ignored, notification of error will be handled by bot.py
+
+	@commands.command()
+	@commands.cooldown(1,3,commands.BucketType.guild)
+	async def hacker(self,ctx, *url):
+		if not url:
+			url = None
+		wait = await ctx.send((await self.bot.funcs.getGlobalMessage(ctx.personality,"command_wait")))
+		try:
+			await ctx.trigger_typing()
+			images = await self.get_images(ctx, urls=url, limit=3)
+			if images:
+				for url in images:
+					b = await self.bot.funcs.bytes_download_images(ctx,url,images)
+					if b is None:
+						continue
+					elif b is False:
+						return
+					img = Image.open(b).convert("RGBA")
+					hacker = Image.open("resource/img/hackerman.png").convert("RGBA")
+					imgr = img.resize((284,193))
+					bg = Image.new("RGBA",(800,578),"white")
+					bg.paste(imgr,(86,212))
+					bg.paste(hacker,(0,0),hacker)
+					final = BytesIO()
+					bg.save(final,"png")
+					final.seek(0)
+					if sys.getsizeof(final) > 8388608:
+						msg = (await self.bot.getGlobalMessage(ctx.personality,"final_upload_too_big"))
+						await ctx.send(msg)
+						continue
+					upload = discord.File(final,"hacker.png")
+					await ctx.send(file=upload)
+			await wait.delete()
+		except discord.errors.Forbidden:
+			msg = (await self.bot.getGlobalMessage(ctx.personality,"no_image_perm"))
+			await wait.edit(content=msg)
+		except Exception as e:
+			await wait.edit(content="`{0}`".format(e))
+			print(e)
 
 	@commands.command(aliases=["wdt"])
 	@commands.cooldown(1,3,commands.BucketType.guild)

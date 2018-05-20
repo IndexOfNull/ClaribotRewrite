@@ -10,6 +10,8 @@ import aiohttp
 import json
 from urllib.parse import urlparse
 import traceback
+from bs4 import BeautifulSoup
+import re
 
 class NSFW():
 
@@ -19,9 +21,109 @@ class NSFW():
 		self.cursor = self.bot.mysql.cursor
 		self.sure = "bmF1Z2h0eWJvaQ=="
 
+	async def check(self,ctx):
+		if isinstance(ctx.channel, discord.TextChannel):
+			val = await self.funcs.getServerOption(ctx.guild.id,"nsfw_enabled")
+			if val == "true":
+				return True
+			elif val == "false":
+				await ctx.send(await self.funcs.getGlobalMessage(ctx.personality,"nsfw_disabled"))
+				return False
+			elif val is None:
+				return True
+			else:
+				await ctx.send(await self.funcs.getGlobalMessage(ctx.personality,"nsfw_disabled"))
+				return False
+
+	async def FAPopular(self,**kwargs):
+		try:
+			type = kwargs.pop("type",["art"])
+			headers = {"User-Agent":"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.139 Safari/537.36"}
+			response = await self.bot.funcs.http_get("http://www.furaffinity.net",headers=headers)
+			results = []
+			data = BeautifulSoup(response,"html.parser")
+			posts_art = data.find("section",attrs={"id":"gallery-frontpage-submissions"})
+			posts_writing = data.find("section",attrs={"id":"gallery-frontpage-writing"})
+			posts_music = data.find("section",attrs={"id":"gallery-frontpage-music"})
+			posts_crafts = data.find("section",attrs={"id":"gallery-frontpage-crafts"})
+			types = {"art":posts_art,"writing":posts_writing,"music":posts_music,"crafts":posts_crafts}
+			doTypes = []
+			for t in type:
+				doTypes.append(types[t])
+			for type in doTypes:
+				posts = type.find_all('figure')
+				for post in posts:
+					postdata = {}
+					fig = post.find("figcaption")
+					text = fig.find_all("a")
+					postdata["name"] = text[0].text
+					postdata["by"] = text[1].text
+					postdata["rating"] = post["class"][0].replace("r-","")
+					postdata["type"] = post["class"][1].replace("t-","")
+					postdata["url"] = "http://www.furaffinity.net" + text[0].get("href")
+					preview = "http:"+post.find("img").get("src")
+					postdata["previews"] = {"200":re.sub(r"[@]\d\d\d","@200",preview),"400":re.sub(r"[@]\d\d\d","@400",preview),"800":re.sub(r"[@]\d\d\d","@800",preview)}
+					postdata["id"] = (post.get("id")).replace("sid-","")
+					results.append(postdata)
+			return results
+		except Exception as e:
+			return None
+
+	async def FASearch(self,**kwargs):
+		try:
+			query = kwargs.pop("query","")
+			results = kwargs.pop("results",48)
+			range = kwargs.pop("range","all")
+			page = kwargs.pop("page",1)
+			order = kwargs.pop("order","relevancy")
+			direction = kwargs.pop("order-direction","desc")
+			rating = kwargs.pop("rating",["general"])
+			type = kwargs.pop("type",["art"])
+			headers = {"User-Agent":"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.139 Safari/537.36"}
+			data = {
+				"q": query,
+				"page": page,
+				"perpage": results,
+				"order-by": order,
+				"order-direction": direction,
+				"range": range,
+				"mode": "extended"
+			}
+			if page is 1:
+				del data["page"]
+			types = ["art","music","flash","photo","story","poetry"]
+			for i in rating:
+				data["rating-"+i] = "on"
+			for i in types:
+				if i in type:
+					data["type-"+i] = "on"
+			response = await self.bot.funcs.http_post("http://www.furaffinity.net/search",headers=headers,params=data)
+			data = BeautifulSoup(response,"html.parser")
+			results = []
+			posts = data.find_all('figure')
+			for post in posts:
+				postdata = {}
+				fig = post.find("figcaption")
+				text = fig.find_all("a")
+				postdata["name"] = text[0].text
+				postdata["by"] = text[1].text
+				postdata["rating"] = post["class"][0].replace("r-","")
+				postdata["type"] = post["class"][1].replace("t-","")
+				postdata["url"] = "http://www.furaffinity.net" + text[0].get("href")
+				preview = "http:"+post.find("img").get("src")
+				postdata["previews"] = {"200":re.sub(r"[@]\d\d\d","@200",preview),"400":re.sub(r"[@]\d\d\d","@400",preview),"800":re.sub(r"[@]\d\d\d","@800",preview)}
+				postdata["id"] = (post.get("id")).replace("sid-","")
+				results.append(postdata)
+			return results
+		except Exception as e:
+			return None
+
+
+
 	async def getDeviantArt(self,**kwargs):
 		query = kwargs.pop("query")
 		furry = kwargs.pop("furry",False)
+
 		ctx = kwargs.pop("ctx",None)
 		no_no = False
 		no = (await self.bot.funcs.b64decode(self.sure))
@@ -93,6 +195,8 @@ class NSFW():
 	@checks.nsfw()
 	@commands.cooldown(1,3,commands.BucketType.guild)
 	async def deviantart(self,ctx,*,query:str=""):
+		if not await self.check(ctx):
+			return False
 		wait = await ctx.send((await self.bot.getGlobalMessage(ctx.personality,"command_wait")))
 		try:
 			url = await self.getDeviantArt(query=query,ctx=ctx)
@@ -110,16 +214,16 @@ class NSFW():
 			await wait.edit(content="`{0}`".format(e))
 			print(e)
 
-	@commands.command()
+	@commands.command(hidden=True)
 	@checks.nsfw()
 	@commands.cooldown(1,3,commands.BucketType.guild)
-	async def yiff(self,ctx,query:str=None):
+	async def yiff(self,ctx,*,query:str=None):
 		wait = await ctx.send((await self.bot.getGlobalMessage(ctx.personality,"command_wait")))
 		try:
 			before=None
 			if randint(0,1) == 1:
-				before=str(randint(1,30)) + "d"
-			response = (await self.bot.funcs.getReddit("yiff",nsfw=True,video=False,before=before))
+				before=str(randint(1,90)) + "d"
+			response = (await self.bot.funcs.getReddit("yiff",nsfw=True,video=False,before=before,query=query if query else ""))
 			if response:
 				response = response["data"]
 			for i in range(10):
@@ -142,7 +246,6 @@ class NSFW():
 				return
 			embed = discord.Embed(title=":camera: **Source**",type="rich",color=discord.Color.purple(),url=url["source"])
 			embed.set_image(url=url["url"])
-			print(url["url"])
 			await wait.delete()
 			await ctx.send(embed=embed)
 
@@ -150,10 +253,43 @@ class NSFW():
 			await ctx.send("`{0}`".format(e))
 			traceback.print_exc()
 
+	@commands.command(aliases=["fa"])
+	@checks.is_special()
+	@commands.cooldown(1,3,commands.BucketType.guild)
+	async def furaffinity(self,ctx,*,query:str=""):
+		try:
+			order = "desc" if not randint(0,5) is 4 else "asc"
+			sort = "relevancy" if not randint(0,5) is 4 else "popularity"
+			page = randint(1,10)
+			pop = False
+			if query == "":
+				results = await self.FAPopular()
+				pop = True
+			else:
+				results = await self.FASearch(query=query,order=sort,direction=order,page=page)
+			if results is None:
+				await ctx.send(await self.funcs.getCommandMessage(ctx.personality,ctx,"error"))
+			if not results and pop is False:
+				results = await self.FASearch(query=query,order=sort,direction=order,page=1)
+			if not results:
+				await ctx.send(await self.funcs.getGlobalMessage(ctx.personality,"nsfw_no_search_result"))
+				return False
+			post = results[randint(0,len(results)-1)]
+			pic = post["previews"]["800"]
+			source = post["url"]
+			embed = discord.Embed(title=":camera: **Source**",type="rich",color=discord.Color.purple(),url=source)
+			embed.set_image(url=pic)
+			await ctx.send(embed=embed)
+		except Exception as e:
+			await ctx.send("`{0}`".format(e))
+
 	@commands.command(aliases=["fur"])
 	@checks.nsfw()
 	@commands.cooldown(1,3,commands.BucketType.guild)
 	async def furry(self,ctx,*,query:str=""):
+		await self.FASearch(query="@keywords macro",results=72,page=100)
+		if not await self.check(ctx):
+			return False
 		wait = await ctx.send((await self.bot.getGlobalMessage(ctx.personality,"command_wait")))
 		try:
 			url = await self.getDeviantArt(query=query,furry=True,ctx=ctx)
@@ -175,6 +311,8 @@ class NSFW():
 	@checks.nsfw()
 	@commands.cooldown(1,3,commands.BucketType.guild)
 	async def catgirl(self,ctx,txt:str=""):
+		if not await self.check(ctx):
+			return False
 		wait = await ctx.send((await self.bot.getGlobalMessage(ctx.personality,"command_wait")))
 		no_no = False
 		if self.sure == (await self.bot.funcs.b64encode(txt)):
