@@ -3,7 +3,7 @@
 -- http://www.phpmyadmin.net
 --
 -- Host: localhost
--- Generation Time: Mar 24, 2018 at 02:48 AM
+-- Generation Time: May 20, 2018 at 11:59 PM
 -- Server version: 10.1.13-MariaDB
 -- PHP Version: 5.6.23
 
@@ -29,13 +29,18 @@ SET time_zone = "+00:00";
 CREATE TABLE `blacklist_channels` (
   `server_id` bigint(32) NOT NULL,
   `channel_id` bigint(32) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
+
+-- --------------------------------------------------------
 
 --
--- Dumping data for table `blacklist_channels`
+-- Table structure for table `blacklist_commands`
 --
 
-
+CREATE TABLE `blacklist_commands` (
+  `server_id` bigint(32) NOT NULL,
+  `command` mediumtext COLLATE utf8mb4_bin NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 
 -- --------------------------------------------------------
 
@@ -46,7 +51,7 @@ CREATE TABLE `blacklist_channels` (
 CREATE TABLE `blacklist_users` (
   `server_id` bigint(20) NOT NULL,
   `user_id` bigint(20) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 
 -- --------------------------------------------------------
 
@@ -55,9 +60,9 @@ CREATE TABLE `blacklist_users` (
 --
 
 CREATE TABLE `bot_data` (
-  `var_name` text CHARACTER SET latin1 NOT NULL,
-  `value` text CHARACTER SET latin1 NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+  `var_name` mediumtext COLLATE utf8mb4_bin NOT NULL,
+  `value` mediumtext COLLATE utf8mb4_bin NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 
 --
 -- Dumping data for table `bot_data`
@@ -74,12 +79,23 @@ INSERT INTO `bot_data` (`var_name`, `value`) VALUES
 
 CREATE TABLE `personality` (
   `server_id` bigint(32) NOT NULL,
-  `personality` text CHARACTER SET latin1 NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+  `personality` mediumtext COLLATE utf8mb4_bin NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
+
+
+-- --------------------------------------------------------
 
 --
--- Dumping data for table `personality`
+-- Table structure for table `points`
 --
+
+CREATE TABLE `points` (
+  `server_id` bigint(32) NOT NULL,
+  `user_id` bigint(32) NOT NULL,
+  `points` bigint(32) NOT NULL,
+  `timestamp` bigint(32) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
+
 
 
 -- --------------------------------------------------------
@@ -90,13 +106,33 @@ CREATE TABLE `personality` (
 
 CREATE TABLE `prefix` (
   `server_id` bigint(32) NOT NULL,
-  `prefix` text CHARACTER SET latin1 NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+  `prefix` mediumtext COLLATE utf8mb4_bin NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
+
+
+-- --------------------------------------------------------
 
 --
--- Dumping data for table `prefix`
+-- Table structure for table `server_options`
 --
 
+CREATE TABLE `server_options` (
+  `server_id` bigint(32) NOT NULL,
+  `var` mediumtext COLLATE utf8mb4_bin NOT NULL,
+  `value` mediumtext COLLATE utf8mb4_bin NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
+
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `tag`
+--
+
+CREATE TABLE `tag` (
+  `id` int(11) NOT NULL,
+  `name` varchar(50) COLLATE utf8mb4_bin DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 
 -- --------------------------------------------------------
 
@@ -107,12 +143,82 @@ CREATE TABLE `prefix` (
 CREATE TABLE `warnings` (
   `server_id` bigint(32) NOT NULL,
   `user_id` bigint(32) NOT NULL,
-  `reason` text CHARACTER SET latin1 NOT NULL,
+  `reason` text COLLATE utf8mb4_bin NOT NULL,
   `warner` bigint(32) NOT NULL,
   `timestamp` bigint(32) NOT NULL,
-  `issue_id` text CHARACTER SET latin1 NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+  `issue_id` mediumtext COLLATE utf8mb4_bin NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 
+--
+-- Indexes for dumped tables
+--
+
+--
+-- Indexes for table `blacklist_channels`
+--
+ALTER TABLE `blacklist_channels`
+  ADD KEY `server_id` (`server_id`),
+  ADD KEY `channel_id` (`channel_id`);
+
+--
+-- Indexes for table `blacklist_commands`
+--
+ALTER TABLE `blacklist_commands`
+  ADD KEY `command_blacklist_serverid_index` (`server_id`);
+
+--
+-- Indexes for table `blacklist_users`
+--
+ALTER TABLE `blacklist_users`
+  ADD KEY `server_id` (`server_id`);
+
+--
+-- Indexes for table `personality`
+--
+ALTER TABLE `personality`
+  ADD KEY `server_id` (`server_id`);
+
+--
+-- Indexes for table `points`
+--
+ALTER TABLE `points`
+  ADD KEY `server_id` (`server_id`),
+  ADD KEY `user_id` (`user_id`);
+
+--
+-- Indexes for table `prefix`
+--
+ALTER TABLE `prefix`
+  ADD KEY `server_id` (`server_id`);
+
+--
+-- Indexes for table `server_options`
+--
+ALTER TABLE `server_options`
+  ADD KEY `server_id` (`server_id`);
+
+--
+-- Indexes for table `tag`
+--
+ALTER TABLE `tag`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `warnings`
+--
+ALTER TABLE `warnings`
+  ADD KEY `server_id` (`server_id`),
+  ADD KEY `user_id` (`user_id`);
+
+--
+-- AUTO_INCREMENT for dumped tables
+--
+
+--
+-- AUTO_INCREMENT for table `tag`
+--
+ALTER TABLE `tag`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
