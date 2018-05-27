@@ -149,7 +149,7 @@ class Misc():
 		try:
 			await ctx.trigger_typing()
 			url = "https://min-api.cryptocompare.com/data/price?fsym=" + incur.upper() + "&tsyms=" + to.upper()
-			resp = await self.bot.funcs.http_get_json(url)
+			resp = await self.bot.funcs.http_get(url,json=True)
 			if resp is False:
 				msg = (await self.getGlobalMessage(ctx.personality,"api_error"))
 				await wait.edit(content=msg)
