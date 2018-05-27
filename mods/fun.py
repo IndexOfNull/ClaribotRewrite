@@ -10,6 +10,8 @@ import urllib
 import traceback
 import re
 import wand
+from utils import checks
+import json
 
 class Colours:
 	RED = (254, 0, 2)
@@ -64,7 +66,6 @@ class Fun():
 
 	async def do_magik(self,scale,imgs):
 		try:
-
 			if isinstance(imgs, (list,)):
 				inImgs = imgs
 				imgs = []
@@ -204,6 +205,7 @@ class Fun():
 			print("oh no, evan died")
 
 	@commands.command(hidden=True)
+	@checks.is_bot_owner()
 	@commands.cooldown(1,3,commands.BucketType.guild)
 	async def urmomsnotalawyer(self,ctx):
 		try:
@@ -414,6 +416,45 @@ class Fun():
 			await wait.edit(content=msg)
 		except Exception as e:
 			await wait.edit(content="`{0}`".format(e))
+			print(e)
+			#ignored, notification of error will be handled by bot.py
+
+	@commands.command(aliases=["cap"])
+	@commands.cooldown(1,3,commands.BucketType.guild)
+	async def caption(self,ctx,*,text:str):
+		try:
+			await ctx.trigger_typing()
+			images = await self.get_images(ctx, urls=None, limit=3)
+			if images:
+				for url in images:
+					b = await self.bot.funcs.bytes_download_images(ctx,url,images)
+					if b is None:
+						continue
+					elif b is False:
+						return
+					img = Image.open(b).convert("RGBA")
+					w,h = img.size
+					font = ImageFont.truetype("resource/font/OpenSans-Semibold.ttf",int((h*0.25)/4))
+					d = ImageDraw.Draw(img)
+					d.rectangle([(0,0),(w,h*0.25)],"white")
+					offset = [int((w/30)),int((h/30))]
+					for line in textwrap.wrap(text,width=25):
+						d.text(offset,line,font=font,fill="#000")
+						offset[1] += font.getsize(line)[1]
+					final = BytesIO()
+					img.save(final,"png")
+					final.seek(0)
+					if sys.getsizeof(final) > 8388608:
+						msg = (await self.bot.getGlobalMessage(ctx.personality,"final_upload_too_big"))
+						await ctx.send(msg)
+						continue
+					upload = discord.File(final,"caption.png")
+					await ctx.send(file=upload)
+		except discord.errors.Forbidden:
+			msg = (await self.bot.getGlobalMessage(ctx.personality,"no_image_perm"))
+			await ctx.send(content=msg)
+		except Exception as e:
+			await ctx.send(content="`{0}`".format(e))
 			print(e)
 			#ignored, notification of error will be handled by bot.py
 
@@ -632,17 +673,12 @@ class Fun():
 	@commands.command(aliases=["whatis"])
 	@commands.cooldown(1,2,commands.BucketType.user)
 	async def identify(self, ctx, *url):
-		wait = await ctx.send((await self.bot.getGlobalMessage(ctx.personality,"command_wait")))
+		#wait = await ctx.send((await self.bot.getGlobalMessage(ctx.personality,"command_wait")))
 		try:
 			await ctx.trigger_typing()
 			images = await self.get_images(ctx, urls=url, limit=2)
 			if images:
 				for url in images:
-					b = await self.bot.funcs.bytes_download_images(ctx,url,images)
-					if b is None:
-						continue
-					if b is False:
-						return
 					data = {
 						"Content": url,
 						"Type": "CaptionRequest",
@@ -650,10 +686,10 @@ class Fun():
 					headers = {
 						"Content-Type": "application/json; charset=utf-8"
 					}
-					resp = await self.bot.funcs.http_post("https://captionbot.azurewebsites.net/api/messages",params=data,headers=headers,json=True)
-					await wait.edit(content=resp)
+					resp = await self.bot.funcs.http_post("https://captionbot.azurewebsites.net/api/messages",params=json.dumps(data),headers=headers,json=True)
+					await ctx.send(content=resp)
 		except Exception as e:
-			await wait.edit(content="`{0}`".format(e))
+			await ctx.send(content="`{0}`".format(e))
 			print(e)
 
 	@commands.command(aliases=["newfunky","funkymode","newfunkymode"])
@@ -759,7 +795,7 @@ class Fun():
 				'template': template
 			})
 			url = "https://insult.mattbas.org/api/insult.json?%s" % params
-			resp = await self.bot.funcs.http_get_json(url)
+			resp = await self.bot.funcs.http_get(url,json=True)
 			stop = False
 			if resp is False: stop = True
 			if resp["error"] is True: stop = True
@@ -780,7 +816,7 @@ class Fun():
 			await ctx.trigger_typing()
 			headers = {"Accept": "application/json"}
 			url = "https://icanhazdadjoke.com"
-			resp = await self.bot.funcs.http_get_json(url,headers=headers)
+			resp = await self.bot.funcs.http_get(url,headers=headers,json=True)
 			stop = False
 			if resp is False: stop = True
 			if resp["status"] == 400: stop = True
@@ -844,7 +880,7 @@ class Fun():
 		try:
 			await ctx.trigger_typing()
 			url = "https://spreadsheets.google.com/feeds/list/1eEa2ra2yHBXVZ_ctH4J15tFSGEu-VTSunsrvaCAV598/od6/public/values?alt=json"
-			response = await self.bot.funcs.http_get_json(url=url)
+			response = await self.bot.funcs.http_get(url=url,json=True)
 			if not response:
 				return
 			if "feed" in response:
@@ -872,6 +908,7 @@ class Fun():
 			print(e)
 
 	@commands.command()
+	@checks.is_special()
 	@commands.cooldown(1,8,commands.BucketType.guild)
 	async def chat(self,ctx,*,message:str):
 		try:

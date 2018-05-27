@@ -90,6 +90,7 @@ class Admin():
 	@commands.command()
 	@commands.cooldown(1,5,commands.BucketType.guild)
 	@checks.mod_or_perm(manage_messages=True)
+	@commands.guild_only()
 	async def clean(self,ctx,num:int):
 		try:
 			numlimit = 100
@@ -112,6 +113,7 @@ class Admin():
 	@prune.command()
 	@commands.cooldown(1,5,commands.BucketType.guild)
 	@checks.mod_or_perm(manage_messages=True)
+	@commands.guild_only()
 	async def bots(self,ctx,num:int):
 		try:
 			numlimit = 100
@@ -133,6 +135,7 @@ class Admin():
 	@prune.command()
 	@commands.cooldown(1,20,commands.BucketType.guild)
 	@checks.mod_or_perm(manage_messages=True)
+	@commands.guild_only()
 	async def gifs(self,ctx,num:int):
 		try:
 			numlimit = 25
@@ -160,6 +163,7 @@ class Admin():
 	@prune.command(name="with")
 	@commands.cooldown(1,20,commands.BucketType.guild)
 	@checks.mod_or_perm(manage_messages=True)
+	@commands.guild_only()
 	async def prune_with(self,ctx,num:int,*,text:str):
 		try:
 			numlimit = 100
@@ -182,6 +186,7 @@ class Admin():
 	@prune.command()
 	@commands.cooldown(1,20,commands.BucketType.guild)
 	@checks.mod_or_perm(manage_messages=True)
+	@commands.guild_only()
 	async def images(self,ctx,num:int):
 		try:
 			numlimit = 25
@@ -209,6 +214,7 @@ class Admin():
 	@prune.command()
 	@commands.cooldown(1,5,commands.BucketType.guild)
 	@checks.mod_or_perm(manage_messages=True)
+	@commands.guild_only()
 	async def embeds(self,ctx,num:int):
 		try:
 			numlimit = 100
@@ -230,6 +236,7 @@ class Admin():
 	@prune.command()
 	@commands.cooldown(1,5,commands.BucketType.guild)
 	@checks.mod_or_perm(manage_messages=True)
+	@commands.guild_only()
 	async def attachments(self,ctx,num:int):
 		try:
 			numlimit = 100

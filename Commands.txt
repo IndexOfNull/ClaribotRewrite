@@ -38,11 +38,13 @@ Fun:
   22. Invert Colors         : $invert <image>
   23. Jpegify An Image      : $magik2 <image>
   24. Who Did This          : $wdt <image>
+  25. Hacker                : $hacker <image>
+  26. Caption an Image      : $caption <text> *puts a caption on the last image (there's no good way of adding a url input)
 
 Misc:
   1. Random Number          : $random <min> <max>
   2. Random Color           : $color
-  3. Crypto                 : $crypto <currency>* <currency>* --3 char currency code
+  3. Crypto                 : $crypto <currency>* <currency>* -3 char currency code
   4. Flip A Coin            : $flip
   5. Roll Some Dice         : $roll <sides> <count>
   6. MD5 Hash               : $md5 <content>*
@@ -69,8 +71,8 @@ Admin/Moderation (tools for admins/mods):
 
 
 SpicyPoints Commands:
-  1. Get a user's points     : $points <user>
-  2. Get a user's level      : $level <user>
+  1. Get a user's points     : $points <user>*
+  2. Get a user's level      : $level <user>*
 
 NSFW (must be used in an NSFW channel):
   1. DeviantArt             : $da <query> (uses DeviantArt's search syntax, so you can search by tags, author, etc.)
@@ -81,7 +83,7 @@ NSFW (must be used in an NSFW channel):
 Server Commands:
   1. (^)Prefix                 : $prefix <prefix>*
   2. (^)Personality            : $personality <personality>*
-  3. Set an option             : $option <option> <setting> (Refer below for a list of options, settings are boolean, so you can type in "true","false","yes","no",etc.)
+  3. (^)Set an option          : $option <option>* <setting> (Refer below for a list of options, settings are boolean, so you can type in "true","false","yes","no",etc.)
 
 Blacklist:
   1. Blacklist              : $blacklist <type> <target>

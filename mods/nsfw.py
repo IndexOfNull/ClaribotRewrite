@@ -20,6 +20,8 @@ class NSFW():
 		self.funcs = self.bot.funcs
 		self.cursor = self.bot.mysql.cursor
 		self.sure = "bmF1Z2h0eWJvaQ=="
+		self.faOptRegex = re.compile("--(\w*) ([\d\w]*)")
+		self.faUrlIDRegex = re.compile("\/(\d*[^/])\/")
 
 	async def check(self,ctx):
 		if isinstance(ctx.channel, discord.TextChannel):
@@ -34,6 +36,38 @@ class NSFW():
 			else:
 				await ctx.send(await self.funcs.getGlobalMessage(ctx.personality,"nsfw_disabled"))
 				return False
+		else:
+			return True
+
+	async def FAPost(self,**kwargs):
+		try:
+			headers = {"User-Agent":"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.139 Safari/537.36"}
+			url = kwargs.pop("url",None)
+			id = kwargs.pop("id",None)
+			full = kwargs.pop("full",False)
+			if not url and not id:
+				return []
+			if not id and url:
+				id = re.search(self.faUrlIDRegex,url)
+				if id:
+					id = id.group(0).replace("/","")
+			url = "http://www.furaffinity.net/" + ("full" if full else "view") + "/" + id + "/"
+			response = await self.funcs.http_get(url,headers=headers)
+			data = BeautifulSoup(response,"html.parser")
+			postdata = {}
+			postdata["dtype"] = "post"
+			postdata["by"] = data.find("td",attrs={"class":"cat","valign":"middle","align":"left"}).find("a").text
+			postdata["name"] =  data.find("img",attrs={"id":"submissionImg"}).get("alt")
+			postdata["url"] = url
+			postdata["rating"] = data.find("td",attrs={"valign":"top","align":"left","class":"alt1 stats-container"}).find("img").get("alt").split(" ")[0].lower()
+			postdata["image"] = "http:" + data.find("img",attrs={"id":"submissionImg"}).get("src")
+			preview = "http:"+data.find("img",attrs={"id":"submissionImg"}).get("data-preview-src")
+			postdata["previews"] = {"200":re.sub(r"[@]\d\d\d","@200",preview),"400":re.sub(r"[@]\d\d\d","@400",preview),"800":re.sub(r"[@]\d\d\d","@800",preview)}
+			postdata["id"] = id
+			return postdata
+		except Exception as e:
+			print(e)
+			return None
 
 	async def FAPopular(self,**kwargs):
 		try:
@@ -56,6 +90,7 @@ class NSFW():
 					postdata = {}
 					fig = post.find("figcaption")
 					text = fig.find_all("a")
+					postdata["dtype"] = "search_result"
 					postdata["name"] = text[0].text
 					postdata["by"] = text[1].text
 					postdata["rating"] = post["class"][0].replace("r-","")
@@ -76,10 +111,14 @@ class NSFW():
 			range = kwargs.pop("range","all")
 			page = kwargs.pop("page",1)
 			order = kwargs.pop("order","relevancy")
-			direction = kwargs.pop("order-direction","desc")
+			direction = kwargs.pop("direction","desc")
 			rating = kwargs.pop("rating",["general"])
 			type = kwargs.pop("type",["art"])
+			id = kwargs.pop("id",None)
 			headers = {"User-Agent":"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.139 Safari/537.36"}
+			if id:
+				results = await self.FAPost(id=id)
+				return results
 			data = {
 				"q": query,
 				"page": page,
@@ -105,6 +144,7 @@ class NSFW():
 				postdata = {}
 				fig = post.find("figcaption")
 				text = fig.find_all("a")
+				postdata["type"] = "search_result"
 				postdata["name"] = text[0].text
 				postdata["by"] = text[1].text
 				postdata["rating"] = post["class"][0].replace("r-","")
@@ -116,6 +156,7 @@ class NSFW():
 				results.append(postdata)
 			return results
 		except Exception as e:
+			print(e)
 			return None
 
 
@@ -218,6 +259,8 @@ class NSFW():
 	@checks.nsfw()
 	@commands.cooldown(1,3,commands.BucketType.guild)
 	async def yiff(self,ctx,*,query:str=None):
+		if not await self.check(ctx):
+			return False
 		wait = await ctx.send((await self.bot.getGlobalMessage(ctx.personality,"command_wait")))
 		try:
 			before=None
@@ -253,41 +296,134 @@ class NSFW():
 			await ctx.send("`{0}`".format(e))
 			traceback.print_exc()
 
-	@commands.command(aliases=["fa"])
+	@commands.command(aliases=["fabomb"])
 	@checks.is_special()
-	@commands.cooldown(1,3,commands.BucketType.guild)
-	async def furaffinity(self,ctx,*,query:str=""):
+	@checks.nsfw()
+	@commands.cooldown(1,10,commands.BucketType.guild)
+	async def furaffinitybomb(self,ctx,*,query:str=""):
+		if not await self.check(ctx):
+			return False
 		try:
+			reArgs = re.findall(self.faOptRegex,query)
+			validOpts = ("page","results","range","order","direction","type")
+			override = False
+			forceopts = {}
+			if reArgs:
+				try:
+					query = (re.sub(self.faOptRegex,"",query)).rstrip()
+					for i,arg in enumerate(reArgs):
+						argName = arg[0]
+						if not argName.lower() in validOpts:
+							continue
+						argValue = None
+						if arg[1]:
+							argValue = arg[1]
+						forceopts[argName] = argValue
+					override=True
+				except Exception as e:
+					print(e)
+					pass
 			order = "desc" if not randint(0,5) is 4 else "asc"
 			sort = "relevancy" if not randint(0,5) is 4 else "popularity"
 			page = randint(1,10)
 			pop = False
-			if query == "":
-				results = await self.FAPopular()
-				pop = True
+			if override:
+				results = await self.FASearch(query=query,**forceopts)
+				if not results:
+					await ctx.send(await self.funcs.getGlobalMessage(ctx.personality,"nsfw_no_search_result"))
+					return False
 			else:
-				results = await self.FASearch(query=query,order=sort,direction=order,page=page)
-			if results is None:
-				await ctx.send(await self.funcs.getCommandMessage(ctx.personality,ctx,"error"))
-			if not results and pop is False:
-				results = await self.FASearch(query=query,order=sort,direction=order,page=1)
-			if not results:
-				await ctx.send(await self.funcs.getGlobalMessage(ctx.personality,"nsfw_no_search_result"))
-				return False
-			post = results[randint(0,len(results)-1)]
-			pic = post["previews"]["800"]
-			source = post["url"]
+				if query == "":
+					results = await self.FAPopular()
+					pop = True
+				else:
+					results = await self.FASearch(query=query,order=sort,direction=order,page=page)
+				if results is None:
+					await ctx.send(await self.funcs.getCommandMessage(ctx.personality,ctx,"error"))
+				if not results and pop is False:
+					results = await self.FASearch(query=query,order=sort,direction=order,page=1)
+				if not results:
+					await ctx.send(await self.funcs.getGlobalMessage(ctx.personality,"nsfw_no_search_result"))
+					return False
+			for post in results[:3]:
+				source = post["url"]
+				pic = post["previews"]["800"]
+				embed = discord.Embed(title=":camera: **Source**",type="rich",color=discord.Color.purple(),url=source)
+				embed.set_image(url=pic)
+				await ctx.send(embed=embed)
+				await asyncio.sleep(0.25)
+		except Exception as e:
+			traceback.print_exc()
+			await ctx.send("`{0}`".format(e))
+
+	@commands.command(aliases=["fa"])
+	@checks.is_special()
+	@checks.nsfw()
+	@commands.cooldown(1,5,commands.BucketType.guild)
+	async def furaffinity(self,ctx,*,query:str=""):
+		if not await self.check(ctx):
+			return False
+		try:
+			reArgs = re.findall(self.faOptRegex,query)
+			validOpts = ("page","results","range","order","direction","type","id")
+			override = False
+			forceopts = {}
+			if reArgs:
+				try:
+					query = (re.sub(self.faOptRegex,"",query)).rstrip()
+					for i,arg in enumerate(reArgs):
+						argName = arg[0]
+						if not argName.lower() in validOpts:
+							continue
+						argValue = None
+						if arg[1]:
+							argValue = arg[1]
+						forceopts[argName] = argValue
+					override=True
+				except Exception as e:
+					print(e)
+					pass
+			order = "desc" if not randint(0,5) is 4 else "asc"
+			sort = "relevancy" if not randint(0,5) is 4 else "popularity"
+			page = randint(1,10)
+			pop = False
+			if override:
+				results = await self.FASearch(query=query,**forceopts)
+
+				if not results:
+					await ctx.send(await self.funcs.getGlobalMessage(ctx.personality,"nsfw_no_search_result"))
+					return False
+			else:
+				if query == "":
+					results = await self.FAPopular()
+					pop = True
+				else:
+					results = await self.FASearch(query=query,order=sort,direction=order,page=page)
+				if results is None:
+					await ctx.send(await self.funcs.getCommandMessage(ctx.personality,ctx,"error"))
+				if not results and pop is False:
+					results = await self.FASearch(query=query,order=sort,direction=order,page=1)
+				if not results:
+					await ctx.send(await self.funcs.getGlobalMessage(ctx.personality,"nsfw_no_search_result"))
+					return False
+			if "id" in forceopts:
+				pic = results["image"]
+				source = results["url"]
+			else:
+				post = results[randint(0,len(results)-1)]
+				pic = post["previews"]["800"]
+				source = post["url"]
 			embed = discord.Embed(title=":camera: **Source**",type="rich",color=discord.Color.purple(),url=source)
 			embed.set_image(url=pic)
 			await ctx.send(embed=embed)
 		except Exception as e:
+			traceback.print_exc()
 			await ctx.send("`{0}`".format(e))
 
 	@commands.command(aliases=["fur"])
 	@checks.nsfw()
 	@commands.cooldown(1,3,commands.BucketType.guild)
 	async def furry(self,ctx,*,query:str=""):
-		await self.FASearch(query="@keywords macro",results=72,page=100)
 		if not await self.check(ctx):
 			return False
 		wait = await ctx.send((await self.bot.getGlobalMessage(ctx.personality,"command_wait")))

@@ -126,7 +126,7 @@ class Funcs():
 				confirmed=False
 				return True
 		try:
-			message2 = await self.bot.wait_for('message', timeout=20.0, check=check)
+			message2 = await self.bot.wait_for('message', timeout=20, check=check)
 		except asyncio.TimeoutError:
 			await notification.delete()
 			#await confmsg.delete()
@@ -179,23 +179,14 @@ class Funcs():
 
 	async def http_get(self, url, **kwargs):
 		headers = kwargs.pop("headers",{})
+		json = kwargs.pop("json",False)
 		try:
 			with async_timeout.timeout(10):
 				async with self.session.get(url,headers=headers) as resp:
-					data = await resp.read()
-					return data
-		except asyncio.TimeoutError:
-			return False
-		except Exception as e:
-			print(e)
-			return False
-
-	async def http_get_json(self, url, **kwargs):
-		headers = kwargs.pop("headers",{})
-		try:
-			with async_timeout.timeout(10):
-				async with self.session.get(url,headers=headers) as resp:
-					data = json.loads(await resp.text())
+					if json:
+						data = json.loads(await resp.text())
+					else:
+						data = await resp.read()
 					return data
 		except asyncio.TimeoutError:
 			return False
