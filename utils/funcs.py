@@ -311,7 +311,6 @@ class Funcs():
 			img_urls = []
 			async for m in ctx.message.channel.history(before=ctx.message, limit=25):
 				check = False
-
 				if len(m.attachments) > 0:
 					#print("getting attachments")
 					last_attachment = m.attachments[0].url
@@ -691,16 +690,21 @@ class Funcs():
 			return False
 		return self.bot.messages[personality]["commands"][name][key]
 
-	async def getPrefix(self,message):
+	async def getPrefix(self,message,guild_id=None):
 		try:
+			override= False
 			if self.bot.dev_mode == True:
 				prefix = ","
+				override = True
 			else:
 				prefix = "$"
-			if isinstance(message.channel, discord.TextChannel) is True and message.content.startswith(prefix+"prefix") is False:
-
+			id = message.guild.id if not guild_id else guild_id
+			if message:
+				if not (isinstance(message.channel, discord.TextChannel) is True and message.content.startswith(prefix+"prefix") is False and not guild_id):
+					return
+			if not override:
 				sql = "SELECT prefix FROM `prefix` WHERE server_id={0}"
-				sql = sql.format(message.guild.id)
+				sql = sql.format(id)
 				result = self.cursor.execute(sql).fetchall()
 				if result:
 					prefix = result[0]["prefix"].lower()

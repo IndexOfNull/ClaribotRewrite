@@ -377,6 +377,83 @@ class Fun():
 			print(e)
 			#ignored, notification of error will be handled by bot.py
 
+	@commands.command(hidden=True)
+	@commands.cooldown(1,3,commands.BucketType.guild)
+	async def see(self,ctx,*url):
+		if not url:
+			url = None
+		try:
+			await ctx.trigger_typing()
+			images = await self.get_images(ctx,urls=url,limit=3)
+			if images:
+				for url in images:
+					b = await self.funcs.bytes_download_images(ctx,url,images)
+					if b is None:
+						continue
+					if b is False:
+						return
+					h = Image.open("resource/img/binoculous.png").convert("RGBA")
+					img = Image.open(b).convert("RGBA")
+					mask = Image.open("resource/img/binoculousmask.png").convert("L")
+					img = img.resize(mask.size,resample=Image.BILINEAR)
+					img.putalpha(mask)
+					h.paste(img,(639,849),img)
+					h.paste(img,(201,896),img)
+					final = BytesIO()
+					h.save(final,"png")
+					h.show()
+					final.seek(0)
+					if sys.getsizeof(final) > 8388608:
+						msg = (await self.bot.getGlobalMessage(ctx.personality,"final_upload_too_big"))
+						await ctx.send(msg)
+						continue
+					upload = discord.File(final,"iseeyou.png")
+					await ctx.send(file=upload)
+		except discord.errors.Forbidden:
+			msg = (await self.bot.getGlobalMessage(ctx.personality,"no_image_perm"))
+			await ctx.send(content=msg)
+		except Exception as e:
+			await ctx.send(content="`{0}`".format(e))
+			print(e)
+			traceback.print_exc()
+
+	@commands.command(aliases=["thankskanye"])
+	@commands.cooldown(1,3,commands.BucketType.guild)
+	async def kanye(self,ctx, *url):
+		if not url:
+			url = None
+		wait = await ctx.send((await self.bot.funcs.getGlobalMessage(ctx.personality,"command_wait")))
+		try:
+			await ctx.trigger_typing()
+			images = await self.get_images(ctx, urls=url, limit=3)
+			if images:
+				for url in images:
+					b = await self.bot.funcs.bytes_download_images(ctx,url,images)
+					if b is None:
+						continue
+					elif b is False:
+						return
+					img = Image.open(b).convert("RGBA")
+					kanye = Image.open("resource/img/thankyoukanye.png").convert("RGBA")
+					img = img.resize((446,347))
+					kanye.paste(img,(27,216),img)
+					final = BytesIO()
+					kanye.save(final,"png")
+					final.seek(0)
+					if sys.getsizeof(final) > 8388608:
+						msg = (await self.bot.getGlobalMessage(ctx.personality,"final_upload_too_big"))
+						await ctx.send(msg)
+						continue
+					upload = discord.File(final,"thankyoukanye.png")
+					await ctx.send(file=upload)
+			await wait.delete()
+		except discord.errors.Forbidden:
+			msg = (await self.bot.getGlobalMessage(ctx.personality,"no_image_perm"))
+			await wait.edit(content=msg)
+		except Exception as e:
+			await wait.edit(content="`{0}`".format(e))
+			print(e)
+
 	@commands.command(aliases=["loganpaul"])
 	@commands.cooldown(1,3,commands.BucketType.guild)
 	async def logan(self,ctx, *url):
@@ -906,6 +983,11 @@ class Fun():
 		except Exception as e:
 			await ctx.send(content="`{0}`".format(e))
 			print(e)
+
+	@commands.command()
+	@commands.cooldown(1,3,commands.BucketType.user)
+	async def syllables(self,ctx,*,message:str):
+		await ctx.send(("`{0}` has {1} syllables.").format(message,random()*randint(0,100)))
 
 	@commands.command()
 	@checks.is_special()

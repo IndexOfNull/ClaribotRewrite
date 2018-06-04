@@ -29,7 +29,8 @@
       "api_error": ":warning: An API error occured.",
       "cooldown": ":watch: This command needs some time before being used again.",
       "level_up": "{0.mention} :hot_pepper: Your spicy level is now {1}",
-      "nsfw_disabled": ":no_entry: NSFW commands have been disabled for this server."
+      "nsfw_disabled": ":no_entry: NSFW commands have been disabled for this server.",
+      "no_faces": ":warning: There are no faces in the used picture, please try again with a different picture."
     },
     "commands": {
       "prefix": {

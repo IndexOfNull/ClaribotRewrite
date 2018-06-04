@@ -27,7 +27,10 @@ modules = [
 "mods.admin"
 ]
 
-
+def get_bot_prefs():
+	with open("bot.json","r") as f:
+		m = json.loads(f.read())
+	return m
 
 current_milli_time = lambda: int(round(time.time() * 1000))
 
@@ -115,6 +118,7 @@ class Claribot(commands.Bot):
 		self.db_pswd = db_pswd
 		self.cmd_start = None
 		self.confirmation_commands = ["delwarning","deletewarning"]
+		self.bot_prefs = get_bot_prefs()
 
 	async def on_ready(self):
 
@@ -215,7 +219,7 @@ class Claribot(commands.Bot):
 		if isinstance(message.channel, discord.TextChannel):
 			await self.handle_points(message)
 
-		prefix_result = await self.funcs.getPrefix(message) #self.get_prefixes(message), could be used for database config
+		prefix_result = await self.funcs.getPrefix(message)
 		prefix = prefix_result
 
 		check = True
@@ -287,10 +291,6 @@ class Claribot(commands.Bot):
 			await ctx.send(msg)
 		else:
 			print("ERROR: " + str(e))
-
-	async def on_command_completion(self,ctx):
-		done_time = ctx.message.created_at.microsecond / 1000 - datetime.time().microsecond / 1000
-		#print("command done in {0} ms".format(done_time))
 
 	@property
 	def get_cursor(self):

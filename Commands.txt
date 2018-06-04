@@ -32,7 +32,7 @@ Fun:
   16. Compliment Someone :) : $wholesome <user>
   17. THIS IS SICKENING     : $maxmoefoe <image>
   18. ITS TIME TO STOP      : $frank <image>
-  19. Chat with the bot     : $chat <message> (HIGHLY EXPERIMENTAL)
+  19. (SB)Chat with the bot : $chat <message> (HIGHLY EXPERIMENTAL)
   20. Deep Fry              : $df <image>
   21. Magik                 : $magik <image>
   22. Invert Colors         : $invert <image>
@@ -40,6 +40,12 @@ Fun:
   24. Who Did This          : $wdt <image>
   25. Hacker                : $hacker <image>
   26. Caption an Image      : $caption <text> *puts a caption on the last image (there's no good way of adding a url input)
+  27. Thank you Kanye       : $kanye <image>
+  28. Binoculars            : $see <image>
+
+Face Enabled:
+  1. Paste Onto Faces       : $paste <images> *multiple urls can be inputted to paste onto different faces (if there are multiple faces). It will use the last picture as input.
+  2. (^^)Draw Boxes On Faces    : $getfaces <images>
 
 Misc:
   1. Random Number          : $random <min> <max>
