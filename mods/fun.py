@@ -965,7 +965,7 @@ class Fun():
 			url = "https://icanhazdadjoke.com"
 			resp = await self.bot.funcs.http_get(url,headers=headers,json=True)
 			stop = False
-			if resp is False: stop = True
+			if resp is False or resp is None: stop = True
 			if resp["status"] == 400: stop = True
 			if stop:
 				msg = (await self.bot.getGlobalMessage(ctx.personality,"api_error"))

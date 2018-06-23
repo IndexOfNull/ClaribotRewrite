@@ -195,11 +195,11 @@ class Funcs():
 
 	async def http_get(self, url, **kwargs):
 		headers = kwargs.pop("headers",{})
-		json = kwargs.pop("json",False)
+		jsonlol = kwargs.pop("json",False)
 		try:
 			with async_timeout.timeout(10):
 				async with self.session.get(url,headers=headers) as resp:
-					if json:
+					if jsonlol:
 						data = json.loads(await resp.text())
 					else:
 						data = await resp.read()
