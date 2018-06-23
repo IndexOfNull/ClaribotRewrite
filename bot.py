@@ -24,7 +24,8 @@ modules = [
 "mods.misc",
 "mods.nsfw",
 "mods.face",
-"mods.admin"
+"mods.admin",
+"mods.imgmanip"
 ]
 
 def get_bot_prefs():
@@ -260,7 +261,7 @@ class Claribot(commands.Bot):
 		if isinstance(e, commands.CommandNotFound):
 			return
 		elif isinstance(e, commands.CommandOnCooldown):
-			msg = (await self.funcs.getGlobalMessage(personality,"cooldown"))
+			msg = (await self.funcs.getGlobalMessage(personality,"cooldown")).format(round(e.retry_after,1))
 			await ctx.send(msg)
 		elif isinstance(e, checks.No_Owner):
 			msg = (await self.funcs.getGlobalMessage(personality,"no_bot_owner"))

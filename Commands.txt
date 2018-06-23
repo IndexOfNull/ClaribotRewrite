@@ -42,37 +42,52 @@ Fun:
   26. Caption an Image      : $caption <text> *puts a caption on the last image (there's no good way of adding a url input)
   27. Thank you Kanye       : $kanye <image>
   28. Binoculars            : $see <image>
+  29. Wasted                : $wasted <image>
+  30. Sharpen-Bomb Image    : $magik3 <image>
 
 Face Enabled:
   1. Paste Onto Faces       : $paste <images> *multiple urls can be inputted to paste onto different faces (if there are multiple faces). It will use the last picture as input.
   2. (^^)Draw Boxes On Faces    : $getfaces <images>
 
+Image Manipulation:
+  1. Invert Colors          : $invert <image>
+  2. Solarize               : $solarize <image> *Inverts colors based on a random threshold
+  3. Flip Image             : $flip <image>
+  4. Rotate 90 Degrees      : $rotate <image>
+  5. Sharpen Image          : $sharpen <image>
+  6. Blur Image             : $blur <image>
+  7. Posterize Image        : $posterize <image>
+  8. Grayscale Image        : $grayscale <image>
+  9. Mirror Image           : $mirror <image>
+
 Misc:
-  1. Random Number          : $random <min> <max>
+  1. Random Number          : $random <min>* <max>*
   2. Random Color           : $color
   3. Crypto                 : $crypto <currency>* <currency>* -3 char currency code
-  4. Flip A Coin            : $flip
+  4. Flip A Coin            : $coin
   5. Roll Some Dice         : $roll <sides> <count>
   6. MD5 Hash               : $md5 <content>*
   7. SHA256 Hash            : $sha256 <content>*
   8. User Avatar            : $avatar <user>
   9. Reverse Text           : $reverse <text>*
   10. Upside Down Text      : $upsidedown <text>*
+  11. Encode QR Code        : $qr <text>* (you can also encode up to 3 urls)
+    11.1 Decode QR Code       : $qr decode <image>
 
 Admin/Moderation (tools for admins/mods):
   1. (~)Warn A User            : $warn <user>* <reason>*
   2. (~)Get warning history    : $warninghistory <user>*
   3. (~)Delete Warning         : $delwarning <warning_id>*
   4. (~)Get Warning            : $getwarning <warning_id>*
-  5. (^)Ban User By ID         : $idban <ids> (ids are space seperated)
-  6. Clean Bot Responses       : $clean <max_messages>
+  5. (^)Ban User By ID         : $idban <ids>* (ids are space seperated)
+  6. Clean Bot Responses       : $clean <max_messages>*
   7. (~)Prune Messages            : $prune <max_messages>* <user>
-    7.1 (~)Prune Bot Messages     : $prune bots <max_messages>
-    7.2 (~)Prune Attachments      : $prune attachments <max_messages>
-    7.3 (~)Prune Embeds           : $prune embeds <max_messages>
-    7.4 (~)Prune Images           : $prune images <max_messages>
-    7.5 (~)Prune Gifs             : $prune gifs <max_messages>
-    7.6 (~)Prune Messages By Text : $prune with <max_messages> <text>
+    7.1 (~)Prune Bot Messages     : $prune bots <max_messages>*
+    7.2 (~)Prune Attachments      : $prune attachments <max_messages>*
+    7.3 (~)Prune Embeds           : $prune embeds <max_messages>*
+    7.4 (~)Prune Images           : $prune images <max_messages>*
+    7.5 (~)Prune Gifs             : $prune gifs <max_messages>*
+    7.6 (~)Prune Messages By Text : $prune with <max_messages>* <text>*
 
 
 

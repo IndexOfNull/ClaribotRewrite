@@ -27,10 +27,11 @@
       "missing_image_attachments": ":no_entry: Please input url(s){0}or attachment(s).",
       "download_fail": ":warning: I was unable to download your image.",
       "api_error": ":warning: An API error occured.",
-      "cooldown": ":watch: This command needs some time before being used again.",
+      "cooldown": ":watch: This command needs some time before being used again. (Please wait {0} seconds)",
       "level_up": "{0.mention} :hot_pepper: Your spicy level is now {1}",
       "nsfw_disabled": ":no_entry: NSFW commands have been disabled for this server.",
-      "no_faces": ":warning: There are no faces in the used picture, please try again with a different picture."
+      "no_faces": ":warning: There are no faces in the used picture, please try again with a different picture.",
+      "generic_limit": ":warning: Please enter {0} than {1}."
     },
     "commands": {
       "prefix": {
@@ -65,7 +66,7 @@
         "high_sides": ":x: Please enter a side count smaller than {0}."
       },
       "warn": {
-        "sent": ":white_check_mark: I've sent a warning to **{0.name}#{0.discriminator}**."
+        "sent": ":white_check_mark: I've sent a warning to **{0.name}#{0.discriminator}**. (issue ID is `{1}`)"
       },
       "warnhistory": {
         "sent": "{0.mention} I've sent you a copy of the warnings for **{1.name}#{1.discriminator}**.",
@@ -129,6 +130,12 @@
         "success": ":white_check_mark: I've successfully cleaned {0} responses.",
         "no_messages": ":x: No messages were cleaned.",
         "error": ":fire: Something went wrong, some responses may have still been cleaned."
+      },
+      "qr": {
+        "no_data": ":question: I couldn't find any QR data in this image. Remember, QR decoding works best with near-perfect images."
+      },
+      "suggest": {
+        "success": ":thumbsup: Your message is on the way to the developer."
       }
     }
   },

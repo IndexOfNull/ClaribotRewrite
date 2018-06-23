@@ -6,8 +6,20 @@ from random import *
 import hashlib
 from sqlalchemy.sql import text
 from io import BytesIO, StringIO
+from pyzbar.pyzbar import ZBarSymbol
+from PIL import Image
 import json
 import sys, os
+pyzbarlib = False
+try:
+	from pyzbar.pyzbar import decode
+	pyzbarlib = True
+except ImportError:
+	print("You need to install the zbar shared libraries on your system for qr decoding commands to work.")
+	pyzbarlib = False
+import qrcode
+
+import traceback
 
 class Utility():
 
@@ -266,7 +278,7 @@ class Utility():
 			self.cursor.commit()
 			await wait.delete()
 			await user.send(embed=embed)
-			msg = (await self.getCommandMessage(ctx.personality,ctx,"sent")).format(user)
+			msg = (await self.getCommandMessage(ctx.personality,ctx,"sent")).format(user,hashed)
 			await ctx.send(msg)
 		except Exception as e:
 			await wait.edit(content="`{0}`".format(e))
@@ -317,10 +329,13 @@ class Utility():
 		wait = await ctx.send((await self.bot.getGlobalMessage(ctx.personality,"command_wait")))
 		try:
 			await ctx.trigger_typing()
-			sql = "SELECT * FROM `warnings` WHERE server_id={0.id} AND issue_id='{1}'".format(ctx.message.guild,warning_id)
-			result = self.cursor.execute(sql).fetchall()[0]
+			sql = "SELECT * FROM `warnings` WHERE server_id={0.id} AND issue_id=:id".format(ctx.message.guild)
+			result = self.cursor.execute(sql,{"id":warning_id}).fetchall()
 
 			if result:
+
+				result = result[0]
+				print(result["timestamp"])
 				embed = discord.Embed(title="Server Warning",type="rich",color=discord.Color.red())
 				embed.add_field(name="Server",value="{0.name} ({0.id})".format(ctx.guild),inline=True)
 				embed.add_field(name="Warned By",value=self.bot.get_user(result["warner"]).mention,inline=True)
@@ -329,11 +344,11 @@ class Utility():
 				embed.add_field(name="Timestamp",value=timestamp,inline=False)
 				embed.add_field(name="Issue ID",value=result["issue_id"],inline=True)
 				embed.add_field(name="Reason",value=result["reason"],inline=False)
-				embed.set_footer(text="This is not a real warning, just a mere recreation")
+				embed.set_footer(text="This is not a real warning, only a recreation")
 				await ctx.message.author.send(embed=embed)
 				await ctx.send((await self.getCommandMessage(ctx.personality,ctx,"sent")).format(ctx.message.author,result["issue_id"]))
 			elif not result:
-				await ctx.send((await self.getCommandMessage(ctx.personality,ctx,"error")).format(ctx.message.author,user))
+				await ctx.send((await self.getCommandMessage(ctx.personality,ctx,"error")))
 			await wait.delete()
 		except Exception as e:
 			self.cursor.rollback()
@@ -477,10 +492,11 @@ class Utility():
 		except Exception as e:
 			await ctx.send("`{0}`".format(e))
 
-	@commands.command(pass_context=True,hidden=True)
+	"""
+	@commands.command(pass_context=True,hidden=True,name="exec")
 	@checks.is_bot_owner()
 	@commands.cooldown(1,5)
-	async def exec(self, ctx, *, code:str):
+	async def exec_code(self, ctx, *, code:str):
 		code = code.strip('` ')
 		python = '```py\n{}\n```'
 		result = None
@@ -499,8 +515,88 @@ class Utility():
 			return
 		if asyncio.iscoroutine(result):
 			result = await result
-		#"```markdown\nUSE THIS WITH EXTREME CAUTION\n\nEval() Results\n=========\n\n> " + python.format(result)) + "\n```"
 		await ctx.message.channel.send(python.format(result))
+		"""
+
+	@commands.group(invoke_without_command=True)
+	@commands.cooldown(1,5,commands.BucketType.guild)
+	async def qr(self,ctx,*data):
+		try:
+
+			def genQR(data):
+				qr = qrcode.QRCode(version=1,box_size=8,border=4,error_correction=qrcode.constants.ERROR_CORRECT_L)
+				qr.add_data(data)
+				img = qr.make_image()
+				bytes = BytesIO()
+				img.save(bytes,"PNG")
+				bytes.seek(0)
+				return bytes
+
+			limit = 3
+			if ctx.invoked_subcommand is None and data is None:
+				await ctx.send(":warning: Please enter data to be encoded.")
+				return
+			concat = False
+			for opt in data:
+				if not (opt.startswith("https://") or opt.startswith("http://")):
+					concat = True
+			if concat:
+				data = " ".join(data)
+				await ctx.send(file=discord.File(genQR(data),"qrcode.png"))
+			else:
+				if len(data) > limit:
+					await ctx.send((await self.getGlobalMessage(ctx.personality,"generic_limit")).format("less","{} URLs".format(limit)))
+					return
+				for i in data:
+					await ctx.send("[ `{}` ]".format(i[:100]),file=discord.File(genQR(i),"qrcode.png"))
+		except Exception as e:
+			await ctx.send("`{0}`".format(e))
+
+	if pyzbarlib:
+
+		@qr.command()
+		@commands.cooldown(1,5,commands.BucketType.guild)
+		async def decode(self,ctx,*urls):
+			try:
+				images = await self.funcs.get_images(ctx,urls=urls,limit=3)
+				if not images:
+					return
+				for url in images:
+					b = await self.bot.funcs.bytes_download_images(ctx,url,images)
+					if b is None:
+						continue
+					elif b is False:
+						return
+					img = Image.open(b).convert("L")
+					data = decode(img,scan_locations=True)
+					embed = discord.Embed(title="Decoded QR Data",type="rich")
+					if not data:
+						await ctx.send((await self.getCommandMessage(ctx.personality,ctx,"no_data","qr")))
+						return
+					for i,v in enumerate(data):
+						embed.add_field(name="QR Data [{}]".format(i+1),value=(v.data).decode("utf-8"),inline=False)
+					await ctx.send(embed=embed)
+			except Exception as e:
+				await ctx.send("`{0}`".format(e))
+				traceback.print_exc()
+
+	@commands.command(aliases=["complain"])
+	@commands.cooldown(1,300,commands.BucketType.guild)
+	async def suggest(self,ctx,*,message:str):
+		user = ctx.message.author
+		timestamp = await self.bot.funcs.getCurrentFormattedTime()
+		server = ctx.message.guild
+		type = "Complaint" if ctx.invoked_with == "complain" else "Suggestion"
+		try:
+			dk = self.bot.get_user(166206078164402176)
+			embed = discord.Embed(title="User {0}".format(type),type="rich",color=discord.Color.green())
+			embed.add_field(name="User",value=user.mention,inline=True)
+			embed.add_field(name="Server",value=server.id,inline=True)
+			embed.add_field(name="Message",value=message,inline=False)
+			embed.add_field(name="Timestamp",value=timestamp,inline=False)
+			await dk.send(embed=embed)
+		except Exception as e:
+			pass
 
 	@commands.command(hidden=True)
 	@checks.is_bot_owner()

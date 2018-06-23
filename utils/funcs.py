@@ -45,7 +45,11 @@ class Funcs():
 			return (await self.getUTCSeconds(datetime.datetime.utcnow()))
 
 	async def secondsToUTC(self,seconds):
-		return datetime.datetime.utcfromtimestamp(seconds)
+		t = datetime.datetime.utcfromtimestamp(seconds)
+		t = t.replace(tzinfo=tz.tzutc())
+		tconverted = t.astimezone(tz.tzlocal())
+		tconverted = tconverted.replace(tzinfo=None)
+		return tconverted
 
 	async def getFormattedTime(self,dt):
 		tzconverted = dt.astimezone(tz.tzlocal())
@@ -55,6 +59,18 @@ class Funcs():
 		current_t = datetime.datetime.now()
 		tzconverted = current_t.astimezone(tz.tzlocal())
 		return tzconverted.strftime("%Y-%m-%d %H:%M:%S {0}".format(tz.tzlocal().tzname(tzconverted)))
+
+	def thumbnail_size(self,image,size):
+		#stolen from PIL, thanks PIL
+		x, y = image.size
+		if x > size[0]:
+			y = int(max(y * size[0] / x, 1))
+			x = int(size[0])
+		if y > size[1]:
+			x = int(max(x * size[1] / y, 1))
+			y = int(size[1])
+		size = x, y
+		return size
 
 	async def imgurToImageUrl(self,id):
 		if id.startswith("http"):

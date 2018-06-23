@@ -74,35 +74,7 @@ class Misc():
 			final += rot180[char]
 		await ctx.send(final)
 
-	@commands.command()
-	@commands.cooldown(1,3,commands.BucketType.guild)
-	async def invert(self,ctx,*urls):
-		try:
-			await ctx.trigger_typing()
-			images = await self.get_images(ctx,urls=urls,limit=3)
-			if images:
-				for url in images:
-					b = await self.bot.funcs.bytes_download_images(ctx,url,images)
-					if b is None:
-						continue
-					elif b is False:
-						return
-					img = Image.open(b).convert("RGB")
-					img = ImageOps.invert(img)
-					final = BytesIO()
-					img.save(final,"png")
-					final.seek(0)
-					if sys.getsizeof(img) > 8388608:
-						msg = (await self.bot.getGlobalMessage(ctx.personality,"final_upload_too_big"))
-						await ctx.send(msg)
-						continue
-					await ctx.send(file=discord.File(final,"inverted.png"))
-		except discord.errors.Forbidden:
-			msg = (await self.bot.getGlobalMessage(ctx.personality,"no_image_perm"))
-			await ctx.send(content=msg)
-		except Exception as e:
-			await ctx.send(content="`{0}`".format(e))
-			print(e)
+
 
 	@commands.command(aliases=["randomnumber"])
 	@commands.cooldown(1,2,commands.BucketType.user)
@@ -168,9 +140,9 @@ class Misc():
 			await wait.edit(content="`{0}`".format(e))
 			print(e)
 
-	@commands.command(aliases=["coin"])
+	@commands.command()
 	@commands.cooldown(1,2,commands.BucketType.user)
-	async def flip(self,ctx):
+	async def coin(self,ctx):
 		wait = await ctx.send((await self.bot.funcs.getGlobalMessage(ctx.personality,"command_wait")))
 		try:
 			await ctx.trigger_typing()
@@ -257,7 +229,6 @@ class Misc():
 		except Exception as e:
 			await wait.edit(content="`{0}`".format(e))
 			print(e)
-
 
 
 def setup(bot):

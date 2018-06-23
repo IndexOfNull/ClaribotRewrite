@@ -63,6 +63,8 @@ class Face():
 			await ctx.trigger_typing()
 			image = await self.get_images(ctx,urls=None,limit=1)
 			pastes = await self.get_images(ctx,urls=urls,limit=8)
+			if not pastes or image:
+				return
 			if image:
 				image = image[0]
 				faces = await self.face.detect(image,landmarks=False)

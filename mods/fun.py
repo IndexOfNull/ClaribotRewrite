@@ -102,6 +102,77 @@ class Fun():
 
 	#Image Based Commands
 
+	@commands.command(aliases=["gta"])
+	@commands.cooldown(1,3,commands.BucketType.guild)
+	async def wasted(self,ctx,*urls):
+		try:
+			await ctx.trigger_typing()
+			images = await self.get_images(ctx,urls=urls,limit=3)
+			if images:
+				for url in images:
+					b = await self.bot.funcs.bytes_download_images(ctx,url,images)
+					if b is None:
+						continue
+					elif b is False:
+						return
+					img = Image.open(b).convert("RGBA")
+					img = ImageOps.grayscale(img)
+					img = img.convert("RGBA")
+					wasted = Image.open("resource/img/wasted.png").convert("RGBA")
+					dimg = Image.new("RGBA",img.size)
+					draw = ImageDraw.Draw(dimg)
+					w,h = img.size
+					rw,rh = (w,(int(h/2)+int(h/8))-(int(h/2)-int(h/8)))
+					draw.rectangle([(0,int(h/2)-int(h/8)),(w,int(h/2)+int(h/8))],fill=(0,0,0,127))
+					img.paste(dimg,(0,0),dimg)
+					wasted.thumbnail((int(rw-20),int(rh/2)))
+					ww,wh = wasted.size
+					img.paste(wasted,(int(rw/2)-int(ww/2),int(h/2)-int(wh/2)),wasted)
+					final = BytesIO()
+					img.save(final,"png")
+					final.seek(0)
+					if sys.getsizeof(img) > 8388608:
+						msg = (await self.bot.getGlobalMessage(ctx.personality,"final_upload_too_big"))
+						await ctx.send(msg)
+						continue
+					await ctx.send(file=discord.File(final,"needsmorejpeg.png"))
+		except discord.errors.Forbidden:
+			msg = (await self.bot.getGlobalMessage(ctx.personality,"no_image_perm"))
+			await ctx.send(content=msg)
+		except Exception as e:
+			await ctx.send(content="`{0}`".format(e))
+			print(e)
+
+	@commands.command(aliases=["recursivesharpen","sharpen2"])
+	@commands.cooldown(1,3,commands.BucketType.guild)
+	async def magik3(self,ctx,*urls):
+		try:
+			await ctx.trigger_typing()
+			images = await self.get_images(ctx,urls=urls,limit=3)
+			if images:
+				for url in images:
+					b = await self.bot.funcs.bytes_download_images(ctx,url,images)
+					if b is None:
+						continue
+					elif b is False:
+						return
+					img = Image.open(b).convert("RGBA")
+					img = ImageEnhance.Sharpness(img).enhance(200)
+					final = BytesIO()
+					img.save(final,"png")
+					final.seek(0)
+					if sys.getsizeof(img) > 8388608:
+						msg = (await self.bot.getGlobalMessage(ctx.personality,"final_upload_too_big"))
+						await ctx.send(msg)
+						continue
+					await ctx.send(file=discord.File(final,"needsmorejpeg.png"))
+		except discord.errors.Forbidden:
+			msg = (await self.bot.getGlobalMessage(ctx.personality,"no_image_perm"))
+			await ctx.send(content=msg)
+		except Exception as e:
+			await ctx.send(content="`{0}`".format(e))
+			print(e)
+
 	@commands.command(aliases=["magik2","jpegify","jpeg"])
 	@commands.cooldown(1,3,commands.BucketType.guild)
 	async def morejpeg(self,ctx,*urls):
@@ -401,7 +472,6 @@ class Fun():
 					h.paste(img,(201,896),img)
 					final = BytesIO()
 					h.save(final,"png")
-					h.show()
 					final.seek(0)
 					if sys.getsizeof(final) > 8388608:
 						msg = (await self.bot.getGlobalMessage(ctx.personality,"final_upload_too_big"))

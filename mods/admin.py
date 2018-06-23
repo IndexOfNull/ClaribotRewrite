@@ -98,11 +98,17 @@ class Admin():
 				await ctx.send((await self.bot.funcs.getCommandMessage(ctx.personality,ctx,"message_limit","prune-messages")).format(numlimit))
 				return
 			counter = 0
+			commands = []
+			for cmd in self.bot.commands:
+				commands.append(cmd.name)
+				for alias in cmd.aliases:
+					commands.append(cmd.name)
 			async for elem in ctx.message.channel.history(limit=num,before=ctx.message):
-				print(self.bot.user.id)
-				if elem.author.id == self.bot.user.id:
+				if elem.content.startswith("$") and elem.content.split(" ")[0][1:] in commands:
 					await elem.delete()
-				counter+=1
+				elif elem.author.id == self.bot.user.id:
+					await elem.delete()
+					counter+=1
 			if counter == 0:
 				await ctx.send((await self.bot.funcs.getCommandMessage(ctx.personality,ctx,"no_messages")))
 			else:
