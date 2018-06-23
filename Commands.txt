@@ -60,19 +60,21 @@ Image Manipulation:
   8. Grayscale Image        : $grayscale <image>
   9. Mirror Image           : $mirror <image>
 
-Misc:
-  1. Random Number          : $random <min>* <max>*
-  2. Random Color           : $color
-  3. Crypto                 : $crypto <currency>* <currency>* -3 char currency code
-  4. Flip A Coin            : $coin
-  5. Roll Some Dice         : $roll <sides> <count>
-  6. MD5 Hash               : $md5 <content>*
-  7. SHA256 Hash            : $sha256 <content>*
-  8. User Avatar            : $avatar <user>
-  9. Reverse Text           : $reverse <text>*
-  10. Upside Down Text      : $upsidedown <text>*
-  11. Encode QR Code        : $qr <text>* (you can also encode up to 3 urls)
-    11.1 Decode QR Code       : $qr decode <image>
+Utility/Information:
+  1. Random Number              : $random <min>* <max>*
+  2. Random Color               : $color
+  3. Crypto                     : $crypto <currency>* <currency>* -3 char currency code
+  4. Flip A Coin                : $coin
+  5. Roll Some Dice             : $roll <sides> <count>
+  6. MD5 Hash                   : $md5 <content>*
+  7. SHA256 Hash                : $sha256 <content>*
+  8. User Avatar                : $avatar <user>
+  9. Reverse Text               : $reverse <text>*
+  10. Upside Down Text          : $upsidedown <text>*
+  11. Encode QR Code            : $qr <text>* (you can also encode up to 3 urls)
+    11.1 Decode QR Code           : $qr decode <image>
+  12. Make A Suggestion         : $suggest <message>* (compliments or other friendly messages are also welcome)
+  13. File A Complaint          : $complain <message>* (please be friendly and constructive)
 
 Admin/Moderation (tools for admins/mods):
   1. (~)Warn A User            : $warn <user>* <reason>*
