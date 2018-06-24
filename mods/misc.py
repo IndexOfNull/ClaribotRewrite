@@ -116,11 +116,11 @@ class Misc():
 
 	@commands.command(aliases=["cryptocurrency"])
 	@commands.cooldown(1,3,commands.BucketType.guild)
-	async def crypto(self,ctx,incur:str,to:str):
+	async def crypto(self,ctx,fromcur:str,tocur:str):
 		wait = await ctx.send((await self.bot.funcs.getGlobalMessage(ctx.personality,"command_wait")))
 		try:
 			await ctx.trigger_typing()
-			url = "https://min-api.cryptocompare.com/data/price?fsym=" + incur.upper() + "&tsyms=" + to.upper()
+			url = "https://min-api.cryptocompare.com/data/price?fsym=" + fromcur.upper() + "&tsyms=" + tocur.upper()
 			resp = await self.bot.funcs.http_get(url,json=True)
 			if resp is False:
 				msg = (await self.getGlobalMessage(ctx.personality,"api_error"))
@@ -130,8 +130,11 @@ class Misc():
 				msg = (await self.getCommandMessage(ctx.personality,ctx,"invalid-codes"))
 				await wait.edit(content=msg)
 				return
-			if to.upper() in resp:
-				msg = "1 " + incur.upper() + " :arrow_right: %f" % resp[to.upper()] + " " + to.upper() + " (according to CryptoCompare.com)"
+			if tocur.upper() in resp:
+				if tocur.upper() == "BTC" and resp[tocur.upper()] < 0.00004:
+					resp["SATOSHI"] = resp[tocur.upper()] * 100000000
+					tocur = "SATOSHI"
+				msg = "1 " + fromcur.upper() + " :arrow_right: %f" % resp[tocur.upper()] + " " + tocur.upper() + " (according to CryptoCompare.com)"
 				await wait.edit(content=msg)
 			else:
 				msg = (await self.getCommandMessage(ctx.personality,ctx,"invalid-codes"))
