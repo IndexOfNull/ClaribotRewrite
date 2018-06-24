@@ -57,12 +57,14 @@ class Face():
 			print(e)
 
 	@commands.command()
+	@checks.is_bot_owner()
 	@commands.cooldown(1,5,commands.BucketType.guild)
 	async def paste(self,ctx,*urls):
 		try:
 			await ctx.trigger_typing()
 			image = await self.get_images(ctx,urls=None,limit=1)
 			pastes = await self.get_images(ctx,urls=urls,limit=8)
+			didface = False
 			if not pastes or image:
 				return
 			if image:
@@ -89,10 +91,14 @@ class Face():
 							t,l,w,h = l.values()
 							i = i.resize((w,h))
 							main.paste(i,(l,t),i)
+							didface = True
 					final = BytesIO()
 					main.save(final,"png")
 					final.seek(0)
-					await ctx.send(file=discord.File(final,"pastes.png"))
+					if didface:
+						await ctx.send(file=discord.File(final,"pastes.png"))
+					else:
+						await ctx.send(":thinking: For some reason no pastes were made.")
 				else:
 					await ctx.send(await self.funcs.getGlobalMessage(ctx.personality,"no_faces"))
 		except discord.errors.Forbidden:

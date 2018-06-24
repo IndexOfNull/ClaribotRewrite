@@ -97,7 +97,7 @@ class Misc():
 			await wait.edit(content="`{0}`".format(e))
 			print(e)
 
-	@commands.command(aliases=["randomcolor"])
+	@commands.command(aliases=["randomcolor","colour"])
 	@commands.cooldown(1,2,commands.BucketType.user)
 	async def color(self,ctx):
 		wait = await ctx.send((await self.bot.funcs.getGlobalMessage(ctx.personality,"command_wait")))
@@ -131,7 +131,7 @@ class Misc():
 				await wait.edit(content=msg)
 				return
 			if to.upper() in resp:
-				msg = "1 " + incur.upper() + " :arrow_right: " + str(resp[to.upper()]) + " " + to.upper() + " (according to CryptoCompare.com)"
+				msg = "1 " + incur.upper() + " :arrow_right: %f" % resp[to.upper()] + " " + to.upper() + " (according to CryptoCompare.com)"
 				await wait.edit(content=msg)
 			else:
 				msg = (await self.getCommandMessage(ctx.personality,ctx,"invalid-codes"))

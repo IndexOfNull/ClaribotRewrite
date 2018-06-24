@@ -426,6 +426,7 @@ class Utility():
 			return False
 
 	@commands.command()
+	@commands.guild_only()
 	@commands.cooldown(1,3,commands.BucketType.user)
 	async def level(self,ctx,user:discord.User=None):
 		try:
@@ -436,6 +437,7 @@ class Utility():
 			ctx.send("`{0}`".format(e))
 
 	@commands.command()
+	@commands.guild_only()
 	@commands.cooldown(1,3,commands.BucketType.user)
 	async def points(self,ctx,user:discord.User=None):
 		try:
@@ -518,7 +520,7 @@ class Utility():
 		await ctx.message.channel.send(python.format(result))
 		"""
 
-	@commands.group(invoke_without_command=True)
+	@commands.command()
 	@commands.cooldown(1,5,commands.BucketType.guild)
 	async def qr(self,ctx,*data):
 		try:
@@ -533,7 +535,7 @@ class Utility():
 				return bytes
 
 			limit = 3
-			if ctx.invoked_subcommand is None and data is None:
+			if data is None:
 				await ctx.send(":warning: Please enter data to be encoded.")
 				return
 			concat = False
@@ -554,9 +556,9 @@ class Utility():
 
 	if pyzbarlib:
 
-		@qr.command()
+		@commands.command()
 		@commands.cooldown(1,5,commands.BucketType.guild)
-		async def decode(self,ctx,*urls):
+		async def qrdecode(self,ctx,*urls):
 			try:
 				images = await self.funcs.get_images(ctx,urls=urls,limit=3)
 				if not images:
@@ -585,7 +587,10 @@ class Utility():
 	async def suggest(self,ctx,*,message:str):
 		user = ctx.message.author
 		timestamp = await self.bot.funcs.getCurrentFormattedTime()
-		server = ctx.message.guild
+		if isinstance(ctx.message.channel,discord.DMChannel):
+			server = ctx.message.channel
+		else:
+			server = ctx.message.guild
 		type = "Complaint" if ctx.invoked_with == "complain" else "Suggestion"
 		try:
 			dk = self.bot.get_user(166206078164402176)

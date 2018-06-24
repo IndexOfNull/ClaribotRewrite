@@ -72,7 +72,7 @@ Utility/Information:
   9. Reverse Text               : $reverse <text>*
   10. Upside Down Text          : $upsidedown <text>*
   11. Encode QR Code            : $qr <text>* (you can also encode up to 3 urls)
-    11.1 Decode QR Code           : $qr decode <image>
+    11.1 Decode QR Code           : $qrdecode <image>
   12. Make A Suggestion         : $suggest <message>* (compliments or other friendly messages are also welcome)
   13. File A Complaint          : $complain <message>* (please be friendly and constructive)
 
