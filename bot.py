@@ -12,6 +12,7 @@ from discord.ext import commands
 import discord
 from utils.funcs import Funcs
 from utils import checks
+from utils import data
 import time
 from random import *
 from chatterbot import ChatBot
@@ -81,6 +82,8 @@ def init_funcs(bot):
 	bot.remove_command("help")
 	funcs = Funcs(bot,cursor)
 	bot.funcs = funcs
+	bot.data = data.Data(bot)
+	bot.AdvChecks = checks.AdvChecks(bot)
 	bot.process_commands = funcs.process_commands
 	bot.get_context = funcs.get_context
 	bot.get_prefix = funcs.get_prefix2

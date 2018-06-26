@@ -93,6 +93,7 @@ Admin/Moderation (tools for admins/mods):
 
 
 
+
 SpicyPoints Commands:
   1. Get a user's points     : $points <user>*
   2. Get a user's level      : $level <user>*
@@ -107,6 +108,7 @@ Server Commands:
   1. (^)Prefix                 : $prefix <prefix>*
   2. (^)Personality            : $personality <personality>*
   3. (^)Set an option          : $option <option>* <setting> (Refer below for a list of options, settings are boolean, so you can type in "true","false","yes","no",etc.)
+  4. Change Bot Nickname       : $nick <nickname> (supplying no nickname will change it back to "Claribot")
 
 Blacklist:
   1. Blacklist              : $blacklist <type> <target>
@@ -119,6 +121,10 @@ Owner Commands (all require bot owner privileges):
   1. Eval                   : $eval <code>*
   2. Playing Status         : $status <text>*
   3. Dump Chatbot Data      : $dump_chatbot_data
+  4. Bot Avatar             : $botavatar <image>
+  5. Manage SpecialBot      : $special <user>*
+    5.1 Give SpecialBot     : $special add <user>*
+    5.2 Remove SpecialBot   : $special remove <user>*
 
 Server Options: (set with $option)
   1. Enable/Disable NSFW Commands   : nsfw_enabled

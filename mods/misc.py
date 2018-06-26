@@ -11,7 +11,7 @@ class Misc():
 	def __init__(self,bot):
 		self.bot = bot
 		self.cursor = self.bot.mysql.cursor
-		self.getGlobalMessage = self.bot.funcs.getGlobalMessage
+		self.getGlobalMessage = self.bot.getGlobalMessage
 		self.getCommandMessage = self.bot.funcs.getCommandMessage
 		self.get_images = self.bot.get_images
 
@@ -79,11 +79,9 @@ class Misc():
 	@commands.command(aliases=["randomnumber"])
 	@commands.cooldown(1,2,commands.BucketType.user)
 	async def random(self,ctx,min:int=1,max:int=10):
-		wait = await ctx.send((await self.bot.funcs.getGlobalMessage(ctx.personality,"command_wait")))
+		wait = await ctx.send((await self.bot.getGlobalMessage(ctx.personality,"command_wait")))
 		if min > max:
-			msg = (await self.bot.getCommandMessage(ctx.personality,ctx,"min-greater","random-number"))
-			await wait.delete()
-			await ctx.send(msg)
+			min,max = max,min
 		try:
 			await ctx.trigger_typing()
 			num = randint(min,max)
@@ -97,10 +95,10 @@ class Misc():
 			await wait.edit(content="`{0}`".format(e))
 			print(e)
 
-	@commands.command(aliases=["randomcolor","colour"])
+	@commands.command(aliases=["randomcolor","colour","randomcolour"])
 	@commands.cooldown(1,2,commands.BucketType.user)
 	async def color(self,ctx):
-		wait = await ctx.send((await self.bot.funcs.getGlobalMessage(ctx.personality,"command_wait")))
+		wait = await ctx.send((await self.bot.getGlobalMessage(ctx.personality,"command_wait")))
 		try:
 			await ctx.trigger_typing()
 			r,g,b = (randint(0,255),randint(0,255),randint(0,255))
@@ -117,7 +115,7 @@ class Misc():
 	@commands.command(aliases=["cryptocurrency"])
 	@commands.cooldown(1,3,commands.BucketType.guild)
 	async def crypto(self,ctx,fromcur:str,tocur:str):
-		wait = await ctx.send((await self.bot.funcs.getGlobalMessage(ctx.personality,"command_wait")))
+		wait = await ctx.send((await self.bot.getGlobalMessage(ctx.personality,"command_wait")))
 		try:
 			await ctx.trigger_typing()
 			url = "https://min-api.cryptocompare.com/data/price?fsym=" + fromcur.upper() + "&tsyms=" + tocur.upper()
@@ -146,7 +144,7 @@ class Misc():
 	@commands.command()
 	@commands.cooldown(1,2,commands.BucketType.user)
 	async def coin(self,ctx):
-		wait = await ctx.send((await self.bot.funcs.getGlobalMessage(ctx.personality,"command_wait")))
+		wait = await ctx.send((await self.bot.getGlobalMessage(ctx.personality,"command_wait")))
 		try:
 			await ctx.trigger_typing()
 			faces = ["Heads","Tails"]
@@ -165,7 +163,7 @@ class Misc():
 		elif sides > 50:
 			await ctx.send((await self.getCommandMessage(ctx.personality,ctx,"high_sides")).format(50))
 			return
-		wait = await ctx.send((await self.bot.funcs.getGlobalMessage(ctx.personality,"command_wait")))
+		wait = await ctx.send((await self.bot.getGlobalMessage(ctx.personality,"command_wait")))
 		try:
 			await ctx.trigger_typing()
 			rolls = []
@@ -185,7 +183,7 @@ class Misc():
 	@commands.command()
 	@commands.cooldown(1,3,commands.BucketType.user)
 	async def md5(self,ctx,content:str):
-		wait = await ctx.send((await self.bot.funcs.getGlobalMessage(ctx.personality,"command_wait")))
+		wait = await ctx.send((await self.bot.getGlobalMessage(ctx.personality,"command_wait")))
 		try:
 			await ctx.trigger_typing()
 			content = content.encode("utf-8")
@@ -202,7 +200,7 @@ class Misc():
 	@commands.command()
 	@commands.cooldown(1,3,commands.BucketType.user)
 	async def sha256(self,ctx,content:str):
-		wait = await ctx.send((await self.bot.funcs.getGlobalMessage(ctx.personality,"command_wait")))
+		wait = await ctx.send((await self.bot.getGlobalMessage(ctx.personality,"command_wait")))
 		try:
 			await ctx.trigger_typing()
 			content = content.encode("utf-8")
@@ -221,7 +219,7 @@ class Misc():
 	async def avatar(self,ctx,user:discord.User=None):
 		if user is None:
 			user = ctx.message.author
-		wait = await ctx.send((await self.bot.funcs.getGlobalMessage(ctx.personality,"command_wait")))
+		wait = await ctx.send((await self.bot.getGlobalMessage(ctx.personality,"command_wait")))
 		try:
 			await ctx.trigger_typing()
 			embed = discord.Embed(title="User Avatar",type="rich",color=discord.Color.teal(),description="{0.name}#{0.discriminator}".format(user))

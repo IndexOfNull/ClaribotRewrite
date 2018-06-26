@@ -654,5 +654,50 @@ class Utility():
 			self.cursor.rollback()
 			await ctx.send("`{0}`".format(e))
 
+	@commands.command(hidden=True)
+	@checks.is_bot_owner()
+	@commands.cooldown(1,5)
+	async def botavatar(self,ctx,*urls):
+		if not urls:
+			urls = None
+		try:
+			image = await self.funcs.get_images(ctx, urls=urls, limit=1)
+			if image:
+				bytes = await self.funcs.bytes_download(image[0])
+				await self.bot.user.edit(avatar=bytes.read())
+				await ctx.send(":white_check_mark: My avatar has been updated successfully!")
+		except Exception as e:
+			await ctx.send("`{}`".format(e))
+
+	@commands.group(hidden=True,invoke_without_command=True)
+	@checks.is_bot_owner()
+	@commands.cooldown(1,5)
+	async def special(self,ctx,user:discord.User):
+		try:
+			special = self.bot.data.AdvCheckData.getUserSpecial(user)
+			await ctx.send((":sparkles:" if special else ":thumbsdown:") + " ***{0.name}#{0.discriminator}*** ".format(user) + ("has" if special else "does not have") + " SpecialBot perms.")
+		except Exception as e:
+			await ctx.send("`{0}`".format(e))
+
+	@special.command(hidden=True)
+	@checks.is_bot_owner()
+	@commands.cooldown(1,5)
+	async def add(self,ctx,user:discord.User):
+		try:
+			self.bot.data.AdvCheckData.addSpecialUser(user)
+			await ctx.send(":sparkles: I successfully gave ***{0.name}#{0.discriminator}*** SpecialBot perms.".format(user))
+		except Exception as e:
+			await ctx.send("`{0}`".format(e))
+
+	@special.command(hidden=True,aliases=["delete"])
+	@checks.is_bot_owner()
+	@commands.cooldown(1,5)
+	async def remove(self,ctx,user:discord.User):
+		try:
+			self.bot.data.AdvCheckData.deleteSpecialUser(user)
+			await ctx.send(":door: ***{0.name}#{0.discriminator}*** has been stripped of their SpecialBot permissions".format(user))
+		except Exception as e:
+			await ctx.send("`{0}`".format(e))
+
 def setup(bot):
 	bot.add_cog(Utility(bot))

@@ -297,8 +297,8 @@ class NSFW():
 			traceback.print_exc()
 
 	@commands.command(aliases=["fabomb"])
-	@checks.is_special()
 	@checks.nsfw()
+	@checks.AdvChecks.is_special()
 	@commands.cooldown(1,10,commands.BucketType.guild)
 	async def furaffinitybomb(self,ctx,*,query:str=""):
 		if not await self.check(ctx):
@@ -357,8 +357,8 @@ class NSFW():
 			await ctx.send("`{0}`".format(e))
 
 	@commands.command(aliases=["fa"])
-	@checks.is_special()
 	@checks.nsfw()
+	@checks.AdvChecks.is_special()
 	@commands.cooldown(1,5,commands.BucketType.guild)
 	async def furaffinity(self,ctx,*,query:str=""):
 		if not await self.check(ctx):
@@ -463,8 +463,6 @@ class NSFW():
 					resp = json.loads(await resp.text())
 					url = "https://nekos.brussell.me/image/" + resp["images"][0]["id"]
 					source = "https://nekos.brussell.me/post/" + resp["images"][0]["id"]
-
-			#response = await aiohttp.get('https://nekos.brussell.me/api/v1/random/image?count=1&nsfw=false', connector=conn)
 			embed = discord.Embed(title=":camera: **Source**",type="rich",color=discord.Color.purple(),url=source)
 			embed.set_image(url=url)
 			await wait.delete()

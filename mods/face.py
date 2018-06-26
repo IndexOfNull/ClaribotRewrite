@@ -29,7 +29,7 @@ class Face():
 				for url in images:
 					faces = await self.face.detect(url,landmarks=False)
 					if "error" in faces:
-						await ctx.send(await self.funcs.getGlobalMessage(ctx.personality,"api_error"))
+						await ctx.send(await self.bot.getGlobalMessage(ctx.personality,"api_error"))
 						continue
 					if faces:
 						b = await self.bot.funcs.bytes_download_images(ctx,url,images)
@@ -48,7 +48,7 @@ class Face():
 						final.seek(0)
 						await ctx.send(file=discord.File(final,"faces.png"))
 				else:
-					await ctx.send(await self.funcs.getGlobalMessage(ctx.personality,"no_faces"))
+					await ctx.send(await self.bot.getGlobalMessage(ctx.personality,"no_faces"))
 		except discord.errors.Forbidden:
 			msg = (await self.bot.getGlobalMessage(ctx.personality,"no_image_perm"))
 			await ctx.send(content=msg)
@@ -71,7 +71,7 @@ class Face():
 				image = image[0]
 				faces = await self.face.detect(image,landmarks=False)
 				if "error" in faces:
-					await ctx.send(await self.funcs.getGlobalMessage(ctx.personality,"api_error"))
+					await ctx.send(await self.bot.getGlobalMessage(ctx.personality,"api_error"))
 					return
 				if faces:
 					b = await self.funcs.bytes_download(image)
@@ -100,7 +100,7 @@ class Face():
 					else:
 						await ctx.send(":thinking: For some reason no pastes were made.")
 				else:
-					await ctx.send(await self.funcs.getGlobalMessage(ctx.personality,"no_faces"))
+					await ctx.send(await self.bot.getGlobalMessage(ctx.personality,"no_faces"))
 		except discord.errors.Forbidden:
 			msg = (await self.bot.getGlobalMessage(ctx.personality,"no_image_perm"))
 			await ctx.send(content=msg)

@@ -3,7 +3,7 @@
 -- http://www.phpmyadmin.net
 --
 -- Host: localhost
--- Generation Time: May 20, 2018 at 11:59 PM
+-- Generation Time: Jun 26, 2018 at 03:00 AM
 -- Server version: 10.1.13-MariaDB
 -- PHP Version: 5.6.23
 
@@ -82,6 +82,10 @@ CREATE TABLE `personality` (
   `personality` mediumtext COLLATE utf8mb4_bin NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 
+--
+-- Dumping data for table `personality`
+--
+
 
 -- --------------------------------------------------------
 
@@ -96,7 +100,9 @@ CREATE TABLE `points` (
   `timestamp` bigint(32) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 
-
+--
+-- Dumping data for table `points`
+--
 
 -- --------------------------------------------------------
 
@@ -108,6 +114,10 @@ CREATE TABLE `prefix` (
   `server_id` bigint(32) NOT NULL,
   `prefix` mediumtext COLLATE utf8mb4_bin NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
+
+--
+-- Dumping data for table `prefix`
+--
 
 
 -- --------------------------------------------------------
@@ -122,16 +132,19 @@ CREATE TABLE `server_options` (
   `value` mediumtext COLLATE utf8mb4_bin NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 
+--
+-- Dumping data for table `server_options`
+--
+
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `tag`
+-- Table structure for table `special_users`
 --
 
-CREATE TABLE `tag` (
-  `id` int(11) NOT NULL,
-  `name` varchar(50) COLLATE utf8mb4_bin DEFAULT NULL
+CREATE TABLE `special_users` (
+  `user_id` bigint(32) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 
 -- --------------------------------------------------------
@@ -170,7 +183,8 @@ ALTER TABLE `blacklist_commands`
 -- Indexes for table `blacklist_users`
 --
 ALTER TABLE `blacklist_users`
-  ADD KEY `server_id` (`server_id`);
+  ADD KEY `server_id` (`server_id`),
+  ADD KEY `user_id` (`user_id`);
 
 --
 -- Indexes for table `personality`
@@ -198,10 +212,10 @@ ALTER TABLE `server_options`
   ADD KEY `server_id` (`server_id`);
 
 --
--- Indexes for table `tag`
+-- Indexes for table `special_users`
 --
-ALTER TABLE `tag`
-  ADD PRIMARY KEY (`id`);
+ALTER TABLE `special_users`
+  ADD KEY `user_id` (`user_id`);
 
 --
 -- Indexes for table `warnings`
@@ -210,15 +224,6 @@ ALTER TABLE `warnings`
   ADD KEY `server_id` (`server_id`),
   ADD KEY `user_id` (`user_id`);
 
---
--- AUTO_INCREMENT for dumped tables
---
-
---
--- AUTO_INCREMENT for table `tag`
---
-ALTER TABLE `tag`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;

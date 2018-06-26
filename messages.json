@@ -52,9 +52,6 @@
         "added_blacklist": ":scroll: I've added `{0}` to the blacklist.",
         "remove_blacklist": ":scroll: I've removed `{0}` from the blacklist."
       },
-      "random-number": {
-        "min-greater": ":warning: Your minimum is greater than your maximum."
-      },
       "crypto": {
         "invalid-codes": ":warning: Something went wrong, make sure that you are using valid 3 character currency codes."
       },
@@ -121,13 +118,13 @@
       },
       "prune-messages": {
         "message_limit": ":chart_with_upwards_trend: Please enter a number of messages less than or equal to {0}.",
-        "success_user": ":white_check_mark: I've successfully pruned {0} messages from {1.mention}.",
-        "success": ":white_check_mark: I've successfully pruned {0} messages",
+        "success_user": ":white_check_mark: I successfully pruned {0} messages from {1.mention}.",
+        "success": ":white_check_mark: I successfully pruned {0} messages",
         "no_messages": ":x: No messages were pruned.",
         "error": ":fire: Something went wrong, some messages may have still been pruned."
       },
       "clean": {
-        "success": ":white_check_mark: I've successfully cleaned {0} responses.",
+        "success": ":white_check_mark: I successfully cleaned {0} responses.",
         "no_messages": ":x: No messages were cleaned.",
         "error": ":fire: Something went wrong, some responses may have still been cleaned."
       },
@@ -136,6 +133,10 @@
       },
       "suggest": {
         "success": ":thumbsup: Your message is on the way to the developer."
+      },
+      "nick": {
+        "too_long": ":warning: Please enter a nickname with fewer than 32 characters.",
+        "success": ":white_check_mark: My nickname has been updated successfully."
       }
     }
   },
@@ -143,7 +144,7 @@
       "_comment": "a little snarky...",
       "global": {
         "command_wait": ":inbox_tray: I'm working on your useless command.",
-        "final_upload_too_big": ":floppy_disk: The resonse file is too big, maybe dieting will help it.",
+        "final_upload_too_big": ":floppy_disk: The response file is too big, maybe dieting will help it.",
         "input_file_too_big": ":floppy_disk: I can't process your input file, I think it's too fat.",
         "image_resolution_limit": ":floppy_disk: I can't process this many ugly pixels, use a resolution smaller than {0}x{1}",
         "nsfw_no_search_result": ":mag: I couldn't find anything matching your query, probably because nobody cares. Now put your dick away.",
@@ -155,7 +156,7 @@
         "no_admin": ":no_entry: You need admin privileges to use this command, you skid.",
         "no_role": ":no_entry: You need a specific role or privelage to use this command (this command hates you).",
         "no_mod": ":no_entry: You need moderator privileges to use this command. Try again when people care enough to make you a moderator.",
-        "no_special": ":sparkles: This command is restricted to non-idoits (SpecialBot peeps).",
+        "no_special": ":sparkles: This command is restricted to non-idiots (SpecialBot peeps).",
         "no_server_owner": ":no_entry: You have to be king of the idiots to use this command (you must be server owner).",
         "no_bot_owner": ":no_entry: Code 4000 lines of code and then maybe you can use this.",
         "file_limit": ":package: Stop DDOSing me, please use less than {0} files.",
@@ -190,9 +191,6 @@
           "added_blacklist": ":scroll: I've added `{0}` to the blacklist.",
           "remove_blacklist": ":scroll: I've removed `{0}` from the blacklist."
         },
-        "random-number": {
-          "min-greater": ":warning: Its called a minimum for a reason, dummy."
-        },
         "crypto": {
           "invalid-codes": ":warning: Something went wrong, make sure that you are using valid 3 character currency codes. Also don't use crypto, its dumb."
         },
@@ -207,7 +205,7 @@
           "sent": ":white_check_mark: I've sent a warning to **{0.name}#{0.discriminator}**"
         },
         "warnhistory": {
-          "sent": "{0.mention} I've sent you a copy of the warnings for **{1.name}#{1.discriminator}**.",
+          "sent": "{0.mention} I sent you a copy of the warnings for **{1.name}#{1.discriminator}**.",
           "clean_full": ":smiley: User **{0.name}#{0.discriminator}** has no warnings on record!",
           "clean_partial": ":neutral_face: User **{0.name}#{0.discriminator}** has no warnings for server **{1.name}** (`{1.id}`), but has some on other servers.",
           "clean_partial_notice": ":exclamation: This user has warnings on other servers."
@@ -218,7 +216,7 @@
         },
         "getwarning": {
           "error": ":warning: The ID you entered doesn't exist or there was a problem retrieving the specified warning.",
-          "sent": "{0.mention} I've sent you a copy of the warning `{1}`"
+          "sent": "{0.mention} I sent you a copy of the warning `{1}`"
         },
         "status": {
           "success": ":white_check_mark: My playing status has been updated successfully."
@@ -239,7 +237,7 @@
         "option": {
           "invalid_option": ":warning: The option you entered is invalid.",
           "invalid_value": ":warning: The value you entered is invalid (try 'yes' or 'no'.)",
-          "success": ":white_check_mark: I've updated `{0}` to `{1}`.",
+          "success": ":white_check_mark: I have successfully set `{0}` to `{1}`.",
           "get_value": ":floppy_disk: `{0}` is currently set to `{1}`.",
           "default_value": ":floppy_disk: `{0}` is currently set to its default value."
         },

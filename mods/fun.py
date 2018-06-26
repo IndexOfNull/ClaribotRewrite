@@ -9,8 +9,13 @@ from random import *
 import urllib
 import traceback
 import re
-import wand
-from utils import checks
+haswand = False
+try:
+	import wand
+	haswand = True
+except ImportError:
+	haswand = False
+from utils import checks, data
 import json
 
 class Colours:
@@ -233,38 +238,40 @@ class Fun():
 			await wait.edit(content="`{0}`".format(e))
 			print(e)
 
-	@commands.command(aliases=["magic","contentaware"],pass_context=True)
-	@commands.cooldown(1,3,commands.BucketType.guild)
-	async def magik(self,ctx,*urls):
-		if not urls:
-			urls = None
-		wait = await ctx.send((await self.bot.funcs.getGlobalMessage(ctx.personality,"command_wait")))
-		try:
-			images = await self.get_images(ctx, urls=urls, limit=3)
-			if images:
+	if haswand:
 
-				magikedImages = await self.do_magik(2,images)
-				if magikedImages is None:
-					msg = (await self.bot.getGlobalMessage(ctx.personality,"image_process_error"))
-					await wait.edit(content=msg)
-					return
-				if magikedImages is False:
-					msg = (await self.bot.getGlobalMessage(ctx.personality,"image_resolution_limit")).format(3000,3000)
-					await wait.edit(content=msg)
-					return
-				for img in magikedImages:
-					if sys.getsizeof(img) > 8388608:
-						msg = (await self.bot.getGlobalMessage(ctx.personality,"final_upload_too_big"))
-						await ctx.send(msg)
-						continue
-					await ctx.send(file=discord.File(img,"magik.jpg"))
-				await wait.delete()
-		except discord.errors.Forbidden:
-			msg = (await self.bot.getGlobalMessage(ctx.personality,"no_image_perm"))
-			await wait.edit(content=msg)
-		except Exception as e:
-			await wait.edit(content="`{0}`".format(e))
-			traceback.print_exc()
+		@commands.command(aliases=["magic","contentaware"],pass_context=True)
+		@commands.cooldown(1,3,commands.BucketType.guild)
+		async def magik(self,ctx,*urls):
+			if not urls:
+				urls = None
+			wait = await ctx.send((await self.bot.getGlobalMessage(ctx.personality,"command_wait")))
+			try:
+				images = await self.get_images(ctx, urls=urls, limit=3)
+				if images:
+
+					magikedImages = await self.do_magik(2,images)
+					if magikedImages is None:
+						msg = (await self.bot.getGlobalMessage(ctx.personality,"image_process_error"))
+						await wait.edit(content=msg)
+						return
+					if magikedImages is False:
+						msg = (await self.bot.getGlobalMessage(ctx.personality,"image_resolution_limit")).format(3000,3000)
+						await wait.edit(content=msg)
+						return
+					for img in magikedImages:
+						if sys.getsizeof(img) > 8388608:
+							msg = (await self.bot.getGlobalMessage(ctx.personality,"final_upload_too_big"))
+							await ctx.send(msg)
+							continue
+						await ctx.send(file=discord.File(img,"magik.jpg"))
+					await wait.delete()
+			except discord.errors.Forbidden:
+				msg = (await self.bot.getGlobalMessage(ctx.personality,"no_image_perm"))
+				await wait.edit(content=msg)
+			except Exception as e:
+				await wait.edit(content="`{0}`".format(e))
+				traceback.print_exc()
 
 	@commands.command(hidden=True)
 	@commands.cooldown(1,3,commands.BucketType.guild)
@@ -290,7 +297,7 @@ class Fun():
 	async def maxmoefoe(self,ctx, *url):
 		if not url:
 			url = None
-		wait = await ctx.send((await self.bot.funcs.getGlobalMessage(ctx.personality,"command_wait")))
+		wait = await ctx.send((await self.bot.getGlobalMessage(ctx.personality,"command_wait")))
 		try:
 			await ctx.trigger_typing()
 			images = await self.get_images(ctx, urls=url, limit=3)
@@ -334,7 +341,7 @@ class Fun():
 	async def frank(self,ctx, *url):
 		if not url:
 			url = None
-		wait = await ctx.send((await self.bot.funcs.getGlobalMessage(ctx.personality,"command_wait")))
+		wait = await ctx.send((await self.bot.getGlobalMessasge(ctx.personality,"command_wait")))
 		try:
 			await ctx.trigger_typing()
 			images = await self.get_images(ctx, urls=url, limit=3)
@@ -376,7 +383,7 @@ class Fun():
 	async def hacker(self,ctx, *url):
 		if not url:
 			url = None
-		wait = await ctx.send((await self.bot.funcs.getGlobalMessage(ctx.personality,"command_wait")))
+		wait = await ctx.send((await self.bot.getGlobalMessasge(ctx.personality,"command_wait")))
 		try:
 			await ctx.trigger_typing()
 			images = await self.get_images(ctx, urls=url, limit=3)
@@ -415,7 +422,7 @@ class Fun():
 	async def whodidthis(self,ctx, *url):
 		if not url:
 			url = None
-		wait = await ctx.send((await self.bot.funcs.getGlobalMessage(ctx.personality,"command_wait")))
+		wait = await ctx.send((await self.bot.getGlobalMessasge(ctx.personality,"command_wait")))
 		try:
 			await ctx.trigger_typing()
 			images = await self.get_images(ctx, urls=url, limit=3)
@@ -492,7 +499,7 @@ class Fun():
 	async def kanye(self,ctx, *url):
 		if not url:
 			url = None
-		wait = await ctx.send((await self.bot.funcs.getGlobalMessage(ctx.personality,"command_wait")))
+		wait = await ctx.send((await self.bot.getGlobalMessasge(ctx.personality,"command_wait")))
 		try:
 			await ctx.trigger_typing()
 			images = await self.get_images(ctx, urls=url, limit=3)
@@ -529,7 +536,7 @@ class Fun():
 	async def logan(self,ctx, *url):
 		if not url:
 			url = None
-		wait = await ctx.send((await self.bot.funcs.getGlobalMessage(ctx.personality,"command_wait")))
+		wait = await ctx.send((await self.bot.getGlobalMessasge(ctx.personality,"command_wait")))
 		try:
 			await ctx.trigger_typing()
 			images = await self.get_images(ctx, urls=url, limit=3)
@@ -582,12 +589,14 @@ class Fun():
 					img = Image.open(b).convert("RGBA")
 					w,h = img.size
 					font = ImageFont.truetype("resource/font/OpenSans-Semibold.ttf",int((h*0.25)/4))
-					d = ImageDraw.Draw(img)
-					d.rectangle([(0,0),(w,h*0.25)],"white")
+					paste = Image.new("RGBA",img.size)
+					d = ImageDraw.Draw(paste,"RGBA")
+					d.rectangle([(0,0),(w,h*0.25)],(0,0,0,125))
 					offset = [int((w/30)),int((h/30))]
 					for line in textwrap.wrap(text,width=25):
-						d.text(offset,line,font=font,fill="#000")
+						d.text(offset,line,font=font,fill="#ffffff")
 						offset[1] += font.getsize(line)[1]
+					img.paste(paste,(0,int(h*0.6)),paste)
 					final = BytesIO()
 					img.save(final,"png")
 					final.seek(0)
@@ -931,12 +940,7 @@ class Fun():
 			await ctx.trigger_typing()
 			if user is None:
 				user = ctx.message.author
-			templates = [
-			"You are <adjective>",
-			"You look like <article target=id> <adjective id=id> <animal>",
-			"Everyone thinks you are <animal> <animal_part>",
-			"	You are as <adjective> as <article target=adj1> <adjective min=1 max=3 id=adj1> <amount> of <adjective min=1 max=3> <animal> <animal_part>"
-			]
+			templates = self.bot.data.MiscData.getInsultTemplates()
 			template = templates[randint(0,len(templates)-1)]
 			params = urllib.parse.urlencode({
 				'template': template
@@ -982,32 +986,7 @@ class Fun():
 		#wait = await ctx.send((await self.bot.getGlobalMessage(ctx.personality,"command_wait")))
 		try:
 			await ctx.trigger_typing()
-			responses = [
-			"It is certain",
-			"It is decidedly so",
-			"Without a doubt",
-			"Yes, definitely",
-			"You may rely on it",
-			"As I see it, yes",
-			"Most likely",
-			"Outlook good",
-			"Yes",
-			"Signs point to yes",
-			"Reply hazy, try again",
-			"Ask again later",
-			"Better not tell you now",
-			"Cannot predict now",
-			"Concentrate and ask again",
-			"Don't count on it",
-			"My reply is no",
-			"My sources say no",
-			"Outlook not so good",
-			"Very doubtful",
-			"The answer lies within",
-			"That's a question for your parents",
-			"Do you think I'm some kind of psychic?",
-			"ERROR: Stupid Question Asked"
-			]
+			responses = self.bot.data.MiscData.get8BallResponses()
 			response = responses[randint(0,len(responses)-1)]
 			await ctx.send(ctx.message.author.mention + " " + response)
 		except Exception as e:
@@ -1026,17 +1005,9 @@ class Fun():
 			user = ctx.message.author
 		try:
 			await ctx.trigger_typing()
-			url = "https://spreadsheets.google.com/feeds/list/1eEa2ra2yHBXVZ_ctH4J15tFSGEu-VTSunsrvaCAV598/od6/public/values?alt=json"
-			response = await self.bot.funcs.http_get(url=url,json=True)
-			if not response:
-				return
-			if "feed" in response:
-				entries = response["feed"]["entry"]
-				entry = entries[randint(0,len(entries)-1)]
-				text = entry["title"]["$t"]
-				await ctx.send(user.mention + " " + text)
-				return
-			await ctx.send(await self.getGlobalMessage(ctx.personality,"api_error"))
+			responses = self.bot.data.MiscData.getWholesomeResponses()
+			entry = responses[randint(0,len(responses)-1)]
+			await ctx.send(entry)
 		except Exception as e:
 			ctx.send("`{0}`".format(e))
 			return
@@ -1060,14 +1031,14 @@ class Fun():
 		await ctx.send(("`{0}` has {1} syllables.").format(message,random()*randint(0,100)))
 
 	@commands.command()
-	@checks.is_special()
+	@checks.AdvChecks.is_special()
 	@commands.cooldown(1,8,commands.BucketType.guild)
 	async def chat(self,ctx,*,message:str):
 		try:
 			urls = re.findall('((^|, )(http|https|wss|ftp|mailto|bitcoin|file|data|irc))+://(?:[a-zA-Z]|[0-9]|[$-_@.&+]    |[!*\(\), ]|(?:%[0-9a-fA-F][0-9a-fA-F]))+', message)#re.findall('https?://(?:[-\w.]|(?:%[\da-fA-F]{2}))+', message)
 			mentions = ctx.message.mentions
 			if urls or mentions:
-				await ctx.send(await self.funcs.getCommandMessage(ctx.personality,ctx,"abuse_prevention"))
+				await ctx.send(await self.bot.getCommandMessage(ctx.personality,ctx,"abuse_prevention"))
 				return
 			await ctx.trigger_typing()
 			conv_id = self.chatbot.storage.create_conversation(id=ctx.message.channel.id)

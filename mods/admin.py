@@ -20,6 +20,22 @@ class Admin():
 		self.getGlobalMessage = self.bot.funcs.getGlobalMessage
 		self.chatbot = self.bot.chatbot
 
+	@commands.command(aliases=["name"])
+	@checks.admin_or_perm(manage_nicknames=True)
+	@commands.bot_has_permissions(change_nickname=True)
+	@commands.cooldown(1,15,commands.BucketType.guild)
+	@commands.guild_only()
+	async def nick(self,ctx,*,nickname:str=""):
+		try:
+			if len(nickname) > 32:
+				await ctx.send(await self.getCommandMessage(ctx.personality,ctx,"too_long"))
+				return
+			await ctx.guild.me.edit(nick=nickname)
+			await ctx.send(await self.getCommandMessage(ctx.personality,ctx,"success"))
+		except Exception as e:
+			await ctx.send("`{}`".format(e))
+
+
 	@commands.command()
 	@checks.admin_or_perm(ban_members=True)
 	@commands.bot_has_permissions(ban_members=True)
@@ -43,17 +59,17 @@ class Admin():
 				else:
 					failed = True
 			if failed == True and success:
-				await ctx.send(await self.bot.funcs.getCommandMessage(ctx.personality,ctx,"user_error"))
+				await ctx.send(await self.bot.getCommandMessage(ctx.personality,ctx,"user_error"))
 				return
 			elif failed == True:
-				await ctx.send(await self.bot.funcs.getCommandMessage(ctx.personality,ctx,"error"))
+				await ctx.send(await self.bot.getCommandMessage(ctx.personality,ctx,"error"))
 				return
 			if success:
-				await ctx.send(await self.bot.funcs.getCommandMessage(ctx.personality,ctx,"success"))
+				await ctx.send(await self.bot.getCommandMessage(ctx.personality,ctx,"success"))
 				return
 		except Exception as e:
 			print(e)
-			await ctx.send(await self.bot.funcs.getCommandMessage(ctx.personality,ctx,"error"))
+			await ctx.send(await self.bot.getCommandMessage(ctx.personality,ctx,"error"))
 
 
 	@commands.group(invoke_without_command=True)
@@ -68,7 +84,7 @@ class Admin():
 				await ctx.send('Valid subcommands are `bots, attachments, embeds, images, with`')
 			elif not num is None:
 				if num > numlimit:
-					await ctx.send((await self.bot.funcs.getCommandMessage(ctx.personality,ctx,"message_limit","prune-messages")).format(numlimit))
+					await ctx.send((await self.bot.getCommandMessage(ctx.personality,ctx,"message_limit","prune-messages")).format(numlimit))
 					return
 				counter = 0
 				async for elem in ctx.message.channel.history(limit=num,before=ctx.message):
@@ -79,13 +95,13 @@ class Admin():
 						await elem.delete()
 					counter+=1
 				if counter == 0:
-					await ctx.send((await self.bot.funcs.getCommandMessage(ctx.personality,ctx,"no_messages","prune-messages")))
+					await ctx.send((await self.bot.getCommandMessage(ctx.personality,ctx,"no_messages","prune-messages")))
 				elif user is not None:
-					await ctx.send((await self.bot.funcs.getCommandMessage(ctx.personality,ctx,"success_user","prune-messages")).format(counter,user))
+					await ctx.send((await self.bot.getCommandMessage(ctx.personality,ctx,"success_user","prune-messages")).format(counter,user))
 				else:
-					await ctx.send((await self.bot.funcs.getCommandMessage(ctx.personality,ctx,"success","prune-messages")).format(counter))
+					await ctx.send((await self.bot.getCommandMessage(ctx.personality,ctx,"success","prune-messages")).format(counter))
 		except:
-			await ctx.send((await self.bot.funcs.getCommandMessage(ctx.personality,ctx,"error","prune-messages")))
+			await ctx.send((await self.bot.getCommandMessage(ctx.personality,ctx,"error","prune-messages")))
 
 	@commands.command()
 	@commands.cooldown(1,5,commands.BucketType.guild)
@@ -95,7 +111,7 @@ class Admin():
 		try:
 			numlimit = 100
 			if num > numlimit:
-				await ctx.send((await self.bot.funcs.getCommandMessage(ctx.personality,ctx,"message_limit","prune-messages")).format(numlimit))
+				await ctx.send((await self.bot.getCommandMessage(ctx.personality,ctx,"message_limit","prune-messages")).format(numlimit))
 				return
 			counter = 0
 			commands = []
@@ -110,11 +126,11 @@ class Admin():
 					await elem.delete()
 					counter+=1
 			if counter == 0:
-				await ctx.send((await self.bot.funcs.getCommandMessage(ctx.personality,ctx,"no_messages")))
+				await ctx.send((await self.bot.getCommandMessage(ctx.personality,ctx,"no_messages")))
 			else:
-				await ctx.send((await self.bot.funcs.getCommandMessage(ctx.personality,ctx,"success")).format(counter))
+				await ctx.send((await self.bot.getCommandMessage(ctx.personality,ctx,"success")).format(counter))
 		except Exception as e:
-			await ctx.send((await self.bot.funcs.getCommandMessage(ctx.personality,ctx,"error")))
+			await ctx.send((await self.bot.getCommandMessage(ctx.personality,ctx,"error")))
 
 	@prune.command()
 	@commands.cooldown(1,5,commands.BucketType.guild)
@@ -124,7 +140,7 @@ class Admin():
 		try:
 			numlimit = 100
 			if num > numlimit:
-				await ctx.send((await self.bot.funcs.getCommandMessage(ctx.personality,ctx,"message_limit","prune-messages")).format(numlimit))
+				await ctx.send((await self.bot.getCommandMessage(ctx.personality,ctx,"message_limit","prune-messages")).format(numlimit))
 				return
 			counter = 0
 			async for elem in ctx.message.channel.history(limit=num,before=ctx.message):
@@ -132,11 +148,11 @@ class Admin():
 					await elem.delete()
 				counter+=1
 			if counter == 0:
-				await ctx.send((await self.bot.funcs.getCommandMessage(ctx.personality,ctx,"no_messages","prune-messages")))
+				await ctx.send((await self.bot.getCommandMessage(ctx.personality,ctx,"no_messages","prune-messages")))
 			else:
-				await ctx.send((await self.bot.funcs.getCommandMessage(ctx.personality,ctx,"success","prune-messages")).format(counter))
+				await ctx.send((await self.bot.getCommandMessage(ctx.personality,ctx,"success","prune-messages")).format(counter))
 		except Exception as e:
-			await ctx.send((await self.bot.funcs.getCommandMessage(ctx.personality,ctx,"error","prune-messages")))
+			await ctx.send((await self.bot.getCommandMessage(ctx.personality,ctx,"error","prune-messages")))
 
 	@prune.command()
 	@commands.cooldown(1,20,commands.BucketType.guild)
@@ -146,7 +162,7 @@ class Admin():
 		try:
 			numlimit = 25
 			if num > numlimit:
-				await ctx.send((await self.bot.funcs.getCommandMessage(ctx.personality,ctx,"message_limit","prune-messages")).format(numlimit))
+				await ctx.send((await self.bot.getCommandMessage(ctx.personality,ctx,"message_limit","prune-messages")).format(numlimit))
 				return
 			counter = 0
 			async for elem in ctx.message.channel.history(limit=num,before=ctx.message):
@@ -160,11 +176,11 @@ class Admin():
 					await elem.delete()
 					counter+=1
 			if counter == 0:
-				await ctx.send((await self.bot.funcs.getCommandMessage(ctx.personality,ctx,"no_messages","prune-messages")))
+				await ctx.send((await self.bot.getCommandMessage(ctx.personality,ctx,"no_messages","prune-messages")))
 			else:
-				await ctx.send((await self.bot.funcs.getCommandMessage(ctx.personality,ctx,"success","prune-messages")).format(counter))
+				await ctx.send((await self.bot.getCommandMessage(ctx.personality,ctx,"success","prune-messages")).format(counter))
 		except Exception as e:
-			await ctx.send((await self.bot.funcs.getCommandMessage(ctx.personality,ctx,"error","prune-messages")))
+			await ctx.send((await self.bot.getCommandMessage(ctx.personality,ctx,"error","prune-messages")))
 
 	@prune.command(name="with")
 	@commands.cooldown(1,20,commands.BucketType.guild)
@@ -174,7 +190,7 @@ class Admin():
 		try:
 			numlimit = 100
 			if num > numlimit:
-				await ctx.send((await self.bot.funcs.getCommandMessage(ctx.personality,ctx,"message_limit","prune-messages")).format(numlimit))
+				await ctx.send((await self.bot.getCommandMessage(ctx.personality,ctx,"message_limit","prune-messages")).format(numlimit))
 				return
 			counter = 0
 			async for elem in ctx.message.channel.history(limit=num,before=ctx.message):
@@ -182,12 +198,12 @@ class Admin():
 					await elem.delete()
 					counter+=1
 			if counter == 0:
-				await ctx.send((await self.bot.funcs.getCommandMessage(ctx.personality,ctx,"no_messages","prune-messages")))
+				await ctx.send((await self.bot.getCommandMessage(ctx.personality,ctx,"no_messages","prune-messages")))
 			else:
-				await ctx.send((await self.bot.funcs.getCommandMessage(ctx.personality,ctx,"success","prune-messages")).format(counter))
+				await ctx.send((await self.bot.getCommandMessage(ctx.personality,ctx,"success","prune-messages")).format(counter))
 		except Exception as e:
 			print(ec)
-			await ctx.send((await self.bot.funcs.getCommandMessage(ctx.personality,ctx,"error","prune-messages")))
+			await ctx.send((await self.bot.getCommandMessage(ctx.personality,ctx,"error","prune-messages")))
 
 	@prune.command()
 	@commands.cooldown(1,20,commands.BucketType.guild)
@@ -197,7 +213,7 @@ class Admin():
 		try:
 			numlimit = 25
 			if num > numlimit:
-				await ctx.send((await self.bot.funcs.getCommandMessage(ctx.personality,ctx,"message_limit","prune-messages")).format(numlimit))
+				await ctx.send((await self.bot.getCommandMessage(ctx.personality,ctx,"message_limit","prune-messages")).format(numlimit))
 				return
 			counter = 0
 			async for elem in ctx.message.channel.history(limit=num,before=ctx.message):
@@ -211,11 +227,11 @@ class Admin():
 					await elem.delete()
 					counter+=1
 			if counter == 0:
-				await ctx.send((await self.bot.funcs.getCommandMessage(ctx.personality,ctx,"no_messages","prune-messages")))
+				await ctx.send((await self.bot.getCommandMessage(ctx.personality,ctx,"no_messages","prune-messages")))
 			else:
-				await ctx.send((await self.bot.funcs.getCommandMessage(ctx.personality,ctx,"success","prune-messages")).format(counter))
+				await ctx.send((await self.bot.getCommandMessage(ctx.personality,ctx,"success","prune-messages")).format(counter))
 		except Exception as e:
-			await ctx.send((await self.bot.funcs.getCommandMessage(ctx.personality,ctx,"error","prune-messages")))
+			await ctx.send((await self.bot.getCommandMessage(ctx.personality,ctx,"error","prune-messages")))
 
 	@prune.command()
 	@commands.cooldown(1,5,commands.BucketType.guild)
@@ -225,7 +241,7 @@ class Admin():
 		try:
 			numlimit = 100
 			if num > numlimit:
-				await ctx.send((await self.bot.funcs.getCommandMessage(ctx.personality,ctx,"message_limit","prune-messages")).format(numlimit))
+				await ctx.send((await self.bot.getCommandMessage(ctx.personality,ctx,"message_limit","prune-messages")).format(numlimit))
 				return
 			counter = 0
 			async for elem in ctx.message.channel.history(limit=num,before=ctx.message):
@@ -233,11 +249,11 @@ class Admin():
 					await elem.delete()
 					counter+=1
 			if counter == 0:
-				await ctx.send((await self.bot.funcs.getCommandMessage(ctx.personality,ctx,"no_messages","prune-messages")))
+				await ctx.send((await self.bot.getCommandMessage(ctx.personality,ctx,"no_messages","prune-messages")))
 			else:
-				await ctx.send((await self.bot.funcs.getCommandMessage(ctx.personality,ctx,"success","prune-messages")).format(counter))
+				await ctx.send((await self.bot.getCommandMessage(ctx.personality,ctx,"success","prune-messages")).format(counter))
 		except Exception as e:
-			await ctx.send((await self.bot.funcs.getCommandMessage(ctx.personality,ctx,"error","prune-messages")))
+			await ctx.send((await self.bot.getCommandMessage(ctx.personality,ctx,"error","prune-messages")))
 
 	@prune.command()
 	@commands.cooldown(1,5,commands.BucketType.guild)
@@ -247,7 +263,7 @@ class Admin():
 		try:
 			numlimit = 100
 			if num > numlimit:
-				await ctx.send((await self.bot.funcs.getCommandMessage(ctx.personality,ctx,"message_limit","prune-messages")).format(numlimit))
+				await ctx.send((await self.bot.getCommandMessage(ctx.personality,ctx,"message_limit","prune-messages")).format(numlimit))
 				return
 			counter = 0
 			async for elem in ctx.message.channel.history(limit=num,before=ctx.message):
@@ -255,11 +271,11 @@ class Admin():
 					await elem.delete()
 					counter+=1
 			if counter == 0:
-				await ctx.send((await self.bot.funcs.getCommandMessage(ctx.personality,ctx,"no_messages","prune-messages")))
+				await ctx.send((await self.bot.getCommandMessage(ctx.personality,ctx,"no_messages","prune-messages")))
 			else:
-				await ctx.send((await self.bot.funcs.getCommandMessage(ctx.personality,ctx,"success","prune-messages")).format(counter))
+				await ctx.send((await self.bot.getCommandMessage(ctx.personality,ctx,"success","prune-messages")).format(counter))
 		except Exception as e:
-			await ctx.send((await self.bot.funcs.getCommandMessage(ctx.personality,ctx,"error","prune-messages")))
+			await ctx.send((await self.bot.getCommandMessage(ctx.personality,ctx,"error","prune-messages")))
 
 
 def setup(bot):

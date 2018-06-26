@@ -1,5 +1,6 @@
 from discord.ext import commands
 import discord.utils
+from utils import data
 
 class No_Owner(commands.CommandError): pass
 class No_Perms(commands.CommandError): pass
@@ -13,16 +14,25 @@ class No_Special(commands.CommandError): pass
 
 bot_owner = 166206078164402176
 
-special_users = [179714881526824960,219938711264165909,158057952085934080,158058382799011840,391373731852976139,158057812054769665] #Ev, Cad, Mil, Dan, Grnt, Mt 
+class AdvChecks():
 
-def is_special():
-	def predicate(ctx):
-		user = ctx.message.author.id
-		if user in special_users or user == bot_owner:
-			return True
-		else:
-			raise No_Special()
-	return commands.check(predicate)
+	def __init__(self,bot2):
+		global bot
+		bot = bot2
+
+	def is_special():
+		try:
+			def predicate(ctx):
+				if ctx.message.author.id == bot_owner:
+					return True
+				special = bot.data.AdvCheckData.getUserSpecial(ctx.message.author)
+				if special:
+					return True
+				else:
+					raise No_Special()
+			return commands.check(predicate)
+		except Exception as e:
+			return False
 
 def is_owner_check(message):
 	if message.author.id == bot_owner:
