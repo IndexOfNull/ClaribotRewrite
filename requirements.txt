@@ -16,7 +16,7 @@ idna==2.6
 idna-ssl==1.0.1
 mathparse==0.1.1
 multidict==4.1.0
-nltk==3.2.5
+nltk==3.4.5
 numpy==1.14.2
 oauthlib==2.0.7
 Pillow==5.0.0
